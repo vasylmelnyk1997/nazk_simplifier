@@ -1,0 +1,35 @@
+вхідний html:
+<td>
+	<div class="info-item">
+		<span class="info-title">Країна:</span>
+		<span class="info-value">Україна</span>
+	</div>
+	<div class="info-item">
+		<span class="info-title">Область:</span>
+		<span class="info-value">Київська</span>
+	</div>
+	<div class="info-item">
+		<span class="info-title">Район:</span>
+		<span class="info-value">Фастівський</span>
+	</div>
+	<div class="info-item">
+		<span class="info-title">Територіальна громада:</span>
+		<span class="info-value">Боярська</span>
+	</div>
+	<div class="info-item">
+		<span class="info-title">Тип населеного пункту:</span>
+		<span class="info-value">Село</span>
+	</div>
+	<div class="info-item">
+		<span class="info-title">Населений пункт:</span>
+		<span class="info-value">Тарасівка</span>
+	</div>
+</td>
+
+вихідний html:
+<td>
+	<div class="info-item">
+		<span class="info-title">Адреса:</span>
+		<span class="info-value">Україна, Київська обл., Фастівський р-н, Боярська ТГ, с. Тарасівка</span>
+	</div>
+</td>

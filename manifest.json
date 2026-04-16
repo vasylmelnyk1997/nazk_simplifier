@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "NAZK Data Simplifier",
+  "version": "1.0",
+  "description": "Приховує блоки на сайті НАЗК за текстом",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NAZK Simplifier"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://public.nazk.gov.ua/documents/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
