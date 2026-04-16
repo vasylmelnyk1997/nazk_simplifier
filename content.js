@@ -314,18 +314,20 @@ function summarizeSecuritiesInStep7() {
 }
 
 function addOnClickForAllCards() {
+    const fnToggle = (cardHeader) => {
+        const cardBody = cardHeader.nextElementSibling;
+        if (cardBody) {
+            cardBody.style.display = cardBody.style.display === "" ? "none" : "";
+        }
+    };
     document
         .querySelectorAll(".card-header")
         .forEach((cardHeader) => {
+            fnToggle(cardHeader);
             cardHeader.addEventListener(
                 'click',
                 (event) => {
-                    const cb = event.currentTarget.nextElementSibling;
-                    
-                    if(!cb) return true;
-                    
-                    cb.style.display = cb.style.display === "" ? "none" : "";
-                    
+                    fnToggle(event.currentTarget);
                     return true;
                 })
         })
