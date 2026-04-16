@@ -1,31 +1,6 @@
-const hideStyle = document.createElement("style");
-hideStyle.id = 'hideNazkUnsuficientDataStyle';
-hideStyle.textContent = ".hideNazkUnsuficientData { display: none !important; } ";
-
-(document.head || document.documentElement).appendChild(hideStyle);
-
-function setHideClassEnabled(enabled) {
-    hideStyle.disabled = !enabled;
-}
-
-function isHideClassEnabled() {
-    return !hideStyle.disabled;
-}
-
-chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
-    if (message?.action === 'toggleHideNazkUnsuficientData') {
-        setHideClassEnabled(!isHideClassEnabled());
-        sendResponse({ enabled: isHideClassEnabled() });
-    }
-    if (message?.action === 'getHideNazkUnsuficientDataState') {
-        sendResponse({ enabled: isHideClassEnabled() });
-    }
-    return true;
-});
-
-function addHideClass(element) {
-    if (element && element.classList && !element.classList.contains('hideNazkUnsuficientData')) {
-        element.classList.add('hideNazkUnsuficientData');
+function hideOrRemoveDomElement(element) {
+    if (element) {
+        element.remove();
     }
 }
 
@@ -35,7 +10,8 @@ function hideTargetElements(targetText) {
     // або має клас color-1 і містить цей текст
     const xpaths = [  `//div[./span[contains(text(),'${targetText}')] or ./div[contains(text(),'${targetText}')]]`
                     , `//div[./span[@class='color-1'] and contains(text(), '${targetText}')]`
-                    , `//div[@class="card" and contains(., "У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі")]`
+                    , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі."]]`
+                    , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування відсутні об'єкти для декларування в цьому розділі."]]`
                    ];
 
     xpaths.forEach(xpath => {
@@ -43,7 +19,7 @@ function hideTargetElements(targetText) {
 
         for (let i = 0; i < result.snapshotLength; i++) {
             const node = result.snapshotItem(i);
-            addHideClass(node);
+            hideOrRemoveDomElement(node);
         }
     });
 }
@@ -92,8 +68,8 @@ function consolidateFullName() {
             `; // Очищаємо вміст, щоб додати новий
 
             // 4. Приховуємо або видаляємо контейнери Імені та По-батькові
-            addHideClass(firstNameContainer);
-            addHideClass(middleNameContainer);
+            hideOrRemoveDomElement(firstNameContainer);
+            hideOrRemoveDomElement(middleNameContainer);
         }
     }
 }
@@ -113,7 +89,7 @@ function hideEmplyStepData() {
 
     for (let i = 0; i < result.snapshotLength; i++) {
         const node = result.snapshotItem(i);
-        addHideClass(node);
+        hideOrRemoveDomElement(node);
     }
 }
 
@@ -134,7 +110,7 @@ function hideEmptyTableColumns() {
         }
 
         // Приховуємо порожні стовпці
-        cellsToHide.forEach(cell => addHideClass(cell));
+        cellsToHide.forEach(cell => hideOrRemoveDomElement(cell));
     });
 }
 
@@ -337,9 +313,24 @@ function summarizeSecuritiesInStep7() {
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
 
-// Приклад використання:
-// const td = document.querySelector('td');
-// transformAddress(td);
+function addOnClickForAllCards() {
+    document
+        .querySelectorAll(".card-header")
+        .forEach((cardHeader) => {
+            cardHeader.addEventListener(
+                'click',
+                (event) => {
+                    const cb = event.currentTarget.nextElementSibling;
+                    
+                    if(!cb) return true;
+                    
+                    cb.style.display = cb.style.display === "" ? "none" : "";
+                    
+                    return true;
+                })
+        })
+        
+}
 
 function processPage() {
     // тексти для приховування та заміни
@@ -378,11 +369,12 @@ function processPage() {
     joinAddressPartsInTable(2, 10);
     joinAddressPartsInTable(3, 3);
     joinAddressPartsInTable(4, 3);
+
+    addOnClickForAllCards();
 }
 
 // Запускаємо при завантаженні
 processPage();
-// console.log(document.getElementById('#hideNazkUnsuficientDataStyle').disabled);
 
 // Стежимо за змінами на сторінці (для динамічного контенту)
 // const observer = new MutationObserver(() => {
