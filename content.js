@@ -1,3 +1,8 @@
+const hoverCardbodyStyle = document.createElement("style");
+hoverCardbodyStyle.id = 'hoverCardbodyStyle_id';
+hoverCardbodyStyle.textContent = ".card-header:hover { background-color: #eee; cursor: pointer; } ";
+(document.head || document.documentElement).appendChild(hoverCardbodyStyle);
+
 function hideOrRemoveDomElement(element) {
     if (element) {
         element.remove();
