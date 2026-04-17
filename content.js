@@ -119,26 +119,35 @@ function hideEmptyTableColumns() {
     });
 }
 
-function tableColumnsInStep11() {
+function findColumnByName(table, name) {
+    return +(Array.from(table.getElementsByTagName("th"))
+        .findIndex(th => th.textContent.toLowerCase() === name.toLowerCase()));
+}
+
+function tableStepNum(number, columnNames) {
+    const table = document.querySelector(`#step-data-${number} table.table`);
+    if (!table) {
+        return undefined;
+    }
     return {
-        num: 0,
-        source: 1,
-        typeOfMoney: 2,
-        amount: 3,
-        incomeRecipient: 4,
+        table,
+        columns: Object.fromEntries(
+            columnNames.map(name => [name, findColumnByName(table, name)])
+        )
     };
 }
 
-function tableStepNum(number) {
-    return document.querySelector(`#step-data-${number} table.table`);
-}
+const columnsInTableStep11 = {
+    ["amount"]: "Розмір (вартість), грн",
+    ["incomeRecipient"]: "Інформація про особу, яка отримала дохід"
+};
 
-function distinctMoneyRecipientsInStep11() {
-    const table = tableStepNum(11);
+function distinctMoneyRecipientsInStep11(tableSpec) {
+    const table = tableSpec.table;
     const rows = table.rows;
     const recipients = new Set();
 
-    const colRecipient = tableColumnsInStep11().incomeRecipient;
+    const colRecipient = tableSpec.columns[columnsInTableStep11.incomeRecipient];
     for (let i = 1; i < rows.length; i++) {
         const recipientCell = rows[i].cells[colRecipient];
         const recipient = recipientCell.innerText.trim();
@@ -149,26 +158,25 @@ function distinctMoneyRecipientsInStep11() {
     return recipients;
 }
 
-function summarizeMoneyInStep11() {
-    const table = tableStepNum(11);
-    if (!table) return;
-
+function summarizeMoneyInStep11(tableSpec) {
+    const table = tableSpec.table;
     const rows = Array.from(table.rows);
 
-    const colAmount = tableColumnsInStep11().amount;
-    const colRecipient = tableColumnsInStep11().incomeRecipient;
+    const colAmount = tableSpec.columns[columnsInTableStep11.amount];
+    const colRecipient = tableSpec.columns[columnsInTableStep11.incomeRecipient];
     let total = 0.0;
     const amountsByRecipient = {};
-    distinctMoneyRecipientsInStep11().forEach(recipient => {
-        amountsByRecipient[recipient] = 0;
-        rows.slice(1)
-            .filter(row => row.cells[colRecipient].innerText.trim() === recipient)
-            .forEach(row => {
-                const amountCell = row.cells[colAmount];
-                const amount = parseFloat(amountCell.innerText) || 0;
-                amountsByRecipient[recipient] += amount;
-            });
-    });
+    distinctMoneyRecipientsInStep11(tableSpec)
+        .forEach(recipient => {
+            amountsByRecipient[recipient] = 0;
+            rows.slice(1)
+                .filter(row => row.cells[colRecipient].innerText.trim() === recipient)
+                .forEach(row => {
+                    const amountCell = row.cells[colAmount];
+                    const amount = parseFloat(amountCell.innerText) || 0;
+                    amountsByRecipient[recipient] += amount;
+                });
+        });
 
     const newRow = rows[rows.length - 1].cloneNode(true);
     for (let i = 0; i < newRow.cells.length; i++) {
@@ -192,23 +200,15 @@ function summarizeMoneyInStep11() {
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
 
-function tableColumnsInStep12() {
-    return {
-        num: 0,
-        source: 1,
-        typeOfMoney: 2,
-        amountAndCurrency: 3,
-        infoAboutOwner: 4,
-    };
-}
+const columnsInTableStep12 = {
+    ["amountAndCurrency"]: "Розмір та валюта активу",
+};
 
-function summarizeMoneyByCurrencyInStep12() {
-    const table = tableStepNum(12);
-    if (!table) return;
-
+function summarizeMoneyByCurrencyInStep12(tableSpec) {
+    const table = tableSpec.table;
     const rows = Array.from(table.rows);
 
-    const colAmountAndCurrency = tableColumnsInStep12().amountAndCurrency;
+    const colAmountAndCurrency = tableSpec.columns[columnsInTableStep12.amountAndCurrency];
 
     const uniqueCurrencies = new Set();
     const pairsAmountAndCurrency = [];
@@ -280,9 +280,10 @@ function transformAddress(data) {
 }
 
 function joinAddressPartsInTable(stepNumber, addressColumnIndex) {
-    const table = tableStepNum(stepNumber);
-    if (!table) return;
-    table.querySelectorAll(`tr td:nth-child(${addressColumnIndex})`)
+    const tableSpec = tableStepNum(stepNumber, []);
+    if (!tableSpec) return;
+    tableSpec.table
+        .querySelectorAll(`tr td:nth-child(${addressColumnIndex})`)
         .forEach(cell => {
             const rawText = cell.innerText.trim();
             if (!rawText) return;
@@ -293,12 +294,16 @@ function joinAddressPartsInTable(stepNumber, addressColumnIndex) {
         });
 }
 
-function summarizeSecuritiesInStep7() {
-    const table = tableStepNum(7);
-    if (!table) return;
+const columnsInTableStep7 = {
+    ["counts"]: "Кількість цінних паперів",
+    ["price"]: "Номінальна вартість одного цінного папера, грн",
+};
 
-    const colCounts = 4;
-    const colPrice = 6;
+function summarizeSecuritiesInStep7(tableSpec) {
+    const table = tableSpec.table;
+
+    const colCounts = tableSpec.columns[columnsInTableStep7.counts];
+    const colPrice = tableSpec.columns[columnsInTableStep7.price];
 
     const rows = Array.from(table.rows);
     const totalSecurities = rows.slice(1)
@@ -369,9 +374,20 @@ function processPage() {
     hideEmplyStepData();
     hideEmptyTableColumns();
 
-    summarizeSecuritiesInStep7();
-    summarizeMoneyInStep11();
-    summarizeMoneyByCurrencyInStep12();
+    const tab7 = tableStepNum(7, Object.keys(columnsInTableStep7).map(alias => columnsInTableStep7[alias]));
+    if(tab7) {
+        summarizeSecuritiesInStep7(tab7);
+    }
+    
+    const tab11 = tableStepNum(11, Object.keys(columnsInTableStep11).map(alias => columnsInTableStep11[alias]));
+    if(tab11) {
+        summarizeMoneyInStep11(tab11);
+    }
+    
+    const tab12 = tableStepNum(12, Object.keys(columnsInTableStep12).map(alias => columnsInTableStep12[alias]));
+    if(tab12) {
+        summarizeMoneyByCurrencyInStep12(tab12);
+    }
 
     joinAddressPartsInTable(2, 10);
     joinAddressPartsInTable(3, 3);
