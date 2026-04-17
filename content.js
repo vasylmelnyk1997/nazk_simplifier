@@ -344,6 +344,28 @@ function addOnClickForAllCards() {
         
 }
 
+function addBadge(text, elementToAppend) {
+    const badgeDiv = document.createElement("div");
+    badgeDiv.textContent = text;
+    Object.assign(badgeDiv.style, {
+        position: 'fixed',
+        zIndex: '300',
+        top: '0',
+        left: '50px',
+        padding: '0 12px',
+        border: '1px solid #bbb',
+        borderTopRightRadius: '0',
+        borderTopLeftRadius: '0',
+        borderBottomRightRadius: '4px',
+        borderBottomLeftRadius: '4px',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        backgroundColor: 'coral',
+        color: 'whitesmoke',
+    });
+    elementToAppend.appendChild(badgeDiv);
+}
+
 function processPage() {
     // тексти для приховування та заміни
     const targetTexts = [
@@ -392,6 +414,11 @@ function processPage() {
     joinAddressPartsInTable(2, 10);
     joinAddressPartsInTable(3, 3);
     joinAddressPartsInTable(4, 3);
+
+    addBadge(
+        document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim(),
+        document.getElementById("nacp-toc") || document.body
+    );
 
     addOnClickForAllCards();
 }
