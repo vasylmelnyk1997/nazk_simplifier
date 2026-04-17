@@ -48,6 +48,7 @@ function consolidateFullName() {
     const xpath = "//div[./*[normalize-space()='Прізвище:']]";
     const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
+    let isDefaultTitle = true;
     for (let i = 0; i < result.snapshotLength; i++) {
         const lastNameContainer = result.snapshotItem(i);
 
@@ -75,6 +76,12 @@ function consolidateFullName() {
             // 4. Приховуємо або видаляємо контейнери Імені та По-батькові
             hideOrRemoveDomElement(firstNameContainer);
             hideOrRemoveDomElement(middleNameContainer);
+
+            // 5. Оновлюємо TITLE
+            if (isDefaultTitle) {
+                isDefaultTitle = false;
+                document.title = fullName;
+            }
         }
     }
 }
