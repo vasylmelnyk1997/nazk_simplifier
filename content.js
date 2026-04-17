@@ -415,10 +415,12 @@ function processPage() {
     joinAddressPartsInTable(3, 3);
     joinAddressPartsInTable(4, 3);
 
+    const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
     addBadge(
-        document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim(),
+        reportYear,
         document.getElementById("nacp-toc") || document.body
     );
+    document.title = `${reportYear}: ${document.title}`;
 
     addOnClickForAllCards();
 }
