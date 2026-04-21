@@ -22,7 +22,7 @@ const tableMetaSpecs = {
         ["tax_id"]: { id: 6, name: "реєстраційний номер облікової картки платника податків (за наявності)" },
         ["passport_details"]: { id: 7, name: "реквізити паспорта громадянина україни / свідоцтво про народження" },
         ["demographic_id"]: { id: 8, name: "унікальний номер запису в єдиному державному демографічному реєстрі (за наявності)" },
-        ["residence"]: { id: 9, name: "зареєстроване місце проживання" },
+        ["location"]: { id: 9, name: "зареєстроване місце проживання" },
     },
 
     ["step-data-3"]: {
@@ -147,6 +147,7 @@ const columnMapTransformations = {
 };
 
 const specificTableDataTransformations = {
+    ["step-data-3"]: { trans: (table, rows, stepSpec) => summarizeObjValuesInStep3(table, rows, stepSpec) },
     ["step-data-7"]: { trans: (table, rows, stepSpec) => summarizeSecuritiesInStep7(table, rows, stepSpec) },
     ["step-data-11"]: { trans: (table, rows, stepSpec) => summarizeMoneyInStep11(table, rows, stepSpec) },
     ["step-data-12"]: { trans: (table, rows, stepSpec) => summarizeMoneyByCurrencyInStep12(table, rows, stepSpec) },
@@ -174,7 +175,7 @@ function lookAndProcessAllSteps() {
         const cardBody = card.querySelector(".card-body");
         const pattern = /У суб'єкта декларування (чи членів його сім'ї )?відсутні об'єкти для декларування в цьому розділі\./;
         if (pattern.test(cardBody.innerText.trim())) {
-            hideOrRemoveDomElement(card);
+            hideDomElement(card);
             return;
         }
 
@@ -209,9 +210,15 @@ function lookAndProcessAllSteps() {
     });
 }
 
-function hideOrRemoveDomElement(element) {
+function removeDomElement(element) {
     if (element) {
         element.remove();
+    }
+}
+
+function hideDomElement(element) {
+    if (element) {
+        element.style.display = "none";
     }
 }
 
@@ -224,41 +231,12 @@ function findXPathElements(xpath, context = document) {
     return elements;
 }
 
-function hideTargetElements(targetText) {
-    // Використовуємо ваш уточнений XPath: батьківський div, 
-    // у якого прямий нащадок (div або span) має потрібний текст
-    // або має клас color-1 і містить цей текст
-    const xpaths = [`//div[./span[contains(text(),'${targetText}')] or ./div[contains(text(),'${targetText}')]]`
-        , `//div[./span[@class='color-1'] and contains(text(), '${targetText}')]`
-        , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі."]]`
-        , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування відсутні об'єкти для декларування в цьому розділі."]]`
-    ];
-
-    xpaths.forEach(xpath => {
-        const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-        for (let i = 0; i < result.snapshotLength; i++) {
-            const node = result.snapshotItem(i);
-            hideOrRemoveDomElement(node);
-        }
-    });
-}
-
-function replaceTargetText(targetText) {
-    const xpath = `//*[contains(text(), '${targetText}')]`;
-
-    const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-    for (let i = 0; i < result.snapshotLength; i++) {
-        result.snapshotItem(i).innerText = "";
-    }
-}
-
 function toProperCase(text) {
     return text.toLowerCase().replace(/(^|\s)\S/g, (match) => match.toUpperCase());
 }
 
 function consolidateFullName(element) {
+    // TODO: title assignment should be done only once, but currently it is done for each found element. Need to optimize.
     // 1. Шукаємо всі div, які мають пряму дитину (span/div) з текстом "Прізвище:"
     const xpath = "//div[./*[normalize-space()='Прізвище:']]";
     const result = findXPathElements(xpath, element);
@@ -287,8 +265,8 @@ function consolidateFullName(element) {
             `; // Очищаємо вміст, щоб додати новий
 
             // 4. Приховуємо або видаляємо контейнери Імені та По-батькові
-            hideOrRemoveDomElement(firstNameContainer);
-            hideOrRemoveDomElement(middleNameContainer);
+            removeDomElement(firstNameContainer);
+            removeDomElement(middleNameContainer);
 
             // 5. Оновлюємо TITLE
             if (isDefaultTitle) {
@@ -297,25 +275,6 @@ function consolidateFullName(element) {
             }
         }
     });
-}
-
-function replaceText(targetText, replacementText) {
-    const xpath = `//span[contains(text(), '${targetText}')]`;
-    const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-    for (let i = 0; i < result.snapshotLength; i++) {
-        result.snapshotItem(i).innerText = replacementText;
-    }
-}
-
-function hideEmplyStepData() {
-    const xpath = `//div[@class="card" and contains(., "У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі")]`;
-    const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-    for (let i = 0; i < result.snapshotLength; i++) {
-        const node = result.snapshotItem(i);
-        hideOrRemoveDomElement(node);
-    }
 }
 
 function hideEmptyTableColumns() {
@@ -333,15 +292,39 @@ function hideEmptyTableColumns() {
                 cellsToHide.push(...colBodyCells, ...colHeadCells);
             }
         }
-
+        
         // Приховуємо порожні стовпці
-        cellsToHide.forEach(cell => hideOrRemoveDomElement(cell));
-    });
-}
+        cellsToHide.forEach(cell => hideDomElement(cell));
+    });    
+}    
 
-function findColumnByName(table, name) {
-    return +(Array.from(table.getElementsByTagName("th"))
-        .findIndex(th => th.textContent.toLowerCase() === name.toLowerCase()));
+function summarizeObjValuesInStep3(table, rows, tableSpec) {
+    const colValue = tableSpec.value.id;
+    
+    const totalValue = rows.slice(1)
+    .map(row => parseFloat(row.cells[colValue].innerText.trim()) || 0)
+    .reduce((sum, value) => sum + value, 0);
+}        
+
+function summarizeSecuritiesInStep7(table, rows, tableSpec) {
+    const colCounts = tableSpec.quantity.id;
+    const colPrice = tableSpec.nominal_value.id;
+
+    const totalSecurities = rows.slice(1)
+        .map(row => {
+            const getInnerValue = (index) => row.cells[index]?.innerText.trim() || "";
+            const count = parseInt(getInnerValue(colCounts)) || 0;
+            const price = parseFloat(getInnerValue(colPrice)) || 0;
+            return [count, price];
+        })
+        .reduce((sum, [count, price]) => sum + (count * price), 0);
+
+    const newRow = rows[rows.length - 1].cloneNode(true);
+    for (let i = 0; i < newRow.cells.length; i++) {
+        newRow.cells[i].innerText = "";
+    }
+    newRow.cells[colPrice].innerText = totalSecurities.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+    table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
 
 function summarizeMoneyInStep11(table, rows, tableSpec) {
@@ -360,13 +343,13 @@ function summarizeMoneyInStep11(table, rows, tableSpec) {
                     const amountCell = row.cells[colAmount];
                     const amount = parseFloat(amountCell.innerText) || 0;
                     amountsByRecipient[recipient] += amount;
-                });
-        });
+                });    
+        });        
 
-    const newRow = rows[rows.length - 1].cloneNode(true);
+    const newRow = rows[rows.length - 1].cloneNode(true);    
     for (let i = 0; i < newRow.cells.length; i++) {
         newRow.cells[i].innerText = "";
-    }
+    }    
 
     Object.keys(amountsByRecipient).forEach((recipient) => {
         total += amountsByRecipient[recipient];
@@ -377,13 +360,13 @@ function summarizeMoneyInStep11(table, rows, tableSpec) {
         recipientRow.cells[colAmount].innerText = amountsByRecipient[recipient].toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
 
         table.getElementsByTagName('tbody')[0].appendChild(recipientRow);
-    });
+    });    
 
     const totalCell = newRow.cells[colAmount];
     totalCell.innerText = total.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
 
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
-}
+}    
 
 function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
     const colAmountAndCurrency = tableSpec.asset_value.id;
@@ -398,13 +381,13 @@ function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
             const currency = amountAndCurrencyElements[1]?.innerText.trim().slice(0, 3) || "undef";
             pairsAmountAndCurrency.push({ amount, currency });
             uniqueCurrencies.add(currency);
-        });
+        });    
 
-    const newRows = [];
+    const newRows = [];    
     newRows[0] = rows[rows.length - 1].cloneNode(true);
     for (let i = 0; i < newRows[0].cells.length; i++) {
         newRows[0].cells[i].innerText = "";
-    }
+    }    
 
     const tbody = table.getElementsByTagName('tbody')[0];
     uniqueCurrencies.forEach((currency, i) => {
@@ -413,11 +396,11 @@ function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
             .reduce((sum, pair) => sum + pair.amount, 0);
         if (i !== 0) {
             newRows[i] = newRows[0].cloneNode(true);
-        }
+        }    
         newRows[i].cells[colAmountAndCurrency].innerText = `${total} ${currency}`;
         tbody.appendChild(newRows[i]);
-    });
-}
+    });    
+}    
 
 function transformAddress(data) {
     // 2. Формуємо скорочення та логіку відображення
@@ -445,21 +428,21 @@ function transformAddress(data) {
         if (type === 'село') npType = 'с.';
         else if (type === 'місто') npType = 'м.';
         else if (type.startsWith('селище')) npType = 'с-ще';
-    }
+    }    
 
     const placeOfLiving = 'Населений пункт';
     if (data[placeOfLiving]) {
         parts.push(`${npType} ${data[placeOfLiving]}`.trim());
-    }
+    }    
 
     // 3. Створюємо новий HTML вміст
     return `
         <div class="info-item">
             <span class="info-title">Адреса: </span>
             <span class="info-value">${parts.join(', ')}</span>
-        </div>
-    `;
-}
+        </div>    
+    `;    
+}    
 
 function joinAddress(cell) {
     const rawText = cell.innerText.trim();
@@ -468,28 +451,7 @@ function joinAddress(cell) {
     const inData = JSON.parse(jsonText);
     const newValue = transformAddress(inData);
     cell.innerHTML = newValue;
-}
-
-function summarizeSecuritiesInStep7(table, rows, tableSpec) {
-    const colCounts = tableSpec.quantity.id;
-    const colPrice = tableSpec.nominal_value.id;
-
-    const totalSecurities = rows.slice(1)
-        .map(row => {
-            const getInnerValue = (index) => row.cells[index]?.innerText.trim() || "";
-            const count = parseInt(getInnerValue(colCounts)) || 0;
-            const price = parseFloat(getInnerValue(colPrice)) || 0;
-            return [count, price];
-        })
-        .reduce((sum, [count, price]) => sum + (count * price), 0);
-
-    const newRow = rows[rows.length - 1].cloneNode(true);
-    for (let i = 0; i < newRow.cells.length; i++) {
-        newRow.cells[i].innerText = "";
-    }
-    newRow.cells[colPrice].innerText = totalSecurities.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
-    table.getElementsByTagName('tbody')[0].appendChild(newRow);
-}
+}    
 
 function addOnClickForAllCards() {
     const fnToggle = (cardHeader) => {
@@ -539,6 +501,7 @@ function addBadge() {
 
 function processPage() {
     lookAndProcessAllSteps();
+    hideEmptyTableColumns();
 
     addOnClickForAllCards();
 
