@@ -3,21 +3,236 @@ hoverCardbodyStyle.id = 'hoverCardbodyStyle_id';
 hoverCardbodyStyle.textContent = ".card-header:hover { background-color: #eee; cursor: pointer; } ";
 (document.head || document.documentElement).appendChild(hoverCardbodyStyle);
 
+const tableMetaSpecs = {
+    ["step-data-0"]: {},
+
+    ["step-data-1"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["fullname"]: { id: 1, name: "прізвище, ім’я, по батькові для ідентифікації за межами україни" },
+        ["document"]: { id: 2, name: "документ, що посвідчує особу" },
+    },
+
+    ["step-data-2"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["relationship"]: { id: 1, name: "звʼязок із субʼєктом декларування" },
+        ["fullname"]: { id: 2, name: "прізвище, імʼя, по батькові (за наявності) для ідентифікації в україні" },
+        ["citizenship"]: { id: 3, name: "громадянство" },
+        ["fullname_abroad"]: { id: 4, name: "прізвище, імʼя, по батькові для ідентифікації за межами україни, документ, що посвідчує особу" },
+        ["birth_date"]: { id: 5, name: "дата народження" },
+        ["tax_id"]: { id: 6, name: "реєстраційний номер облікової картки платника податків (за наявності)" },
+        ["passport_details"]: { id: 7, name: "реквізити паспорта громадянина україни / свідоцтво про народження" },
+        ["demographic_id"]: { id: 8, name: "унікальний номер запису в єдиному державному демографічному реєстрі (за наявності)" },
+        ["residence"]: { id: 9, name: "зареєстроване місце проживання" },
+    },
+
+    ["step-data-3"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["type_characteristics"]: { id: 1, name: "вид та характеристика обʼєкта, дата набуття права" },
+        ["location"]: { id: 2, name: "місцезнаходження обʼєкта" },
+        ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
+        ["info"]: { id: 4, name: "інформація щодо особи, якій належить об’єкт, і прав на нього" },
+    },
+
+    ["step-data-4"]: {},
+
+    ["step-data-5"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["type_characteristics"]: { id: 1, name: "вид та характеристика обʼєкта, дата набуття права" },
+        ["features"]: { id: 2, name: "характеристика обʼєкта" },
+        ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
+        ["person_info"]: { id: 4, name: "інформація щодо особи, якій належить об’єкт, і прав на нього" },
+    },
+
+    ["step-data-6"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["type_characteristics"]: { id: 1, name: "вид, загальна інформація про обʼєкт, ідентифікаційний номер (за наявності), дата набуття права" },
+        ["brand_model_year"]: { id: 2, name: "марка, модель, рік випуску" },
+        ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
+        ["person_info"]: { id: 4, name: "інформація щодо особи, якій належить обʼєкт, і прав на нього" },
+    },
+
+    ["step-data-7"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["type_characteristics"]: { id: 1, name: "вид цінного паперу, дата набуття права" },
+        ["issuer"]: { id: 2, name: "емітент" },
+        ["transfer_info"]: { id: 3, name: "інформація щодо передачі в управління іншій особі" },
+        ["quantity"]: { id: 4, name: "кількість цінних паперів" },
+        ["nominal_value"]: { id: 5, name: "номінальна вартість одного цінного папера, грн" },
+        ["owner_info"]: { id: 6, name: "інформація щодо особи, якій належить обʼєкт, і прав на нього" },
+    },  
+
+    ["step-data-8"]: {},
+
+    ["step-data-9"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["business_info"]: { id: 1, name: "загальна інформація про субʼєкта господарювання" },
+        ["address_contacts"]: { id: 2, name: "адреса та контакти субʼєкта господарювання" },
+        ["object_info"]: { id: 3, name: "інформація щодо особи, якій належить обʼєкт" },
+    },
+    
+    ["step-data-10"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["type_characteristics"]: { id: 1, name: "вид та загальна інформація про обʼєкт, дата виникнення права" },
+        ["features"]: { id: 2, name: "характеристики обʼєкта" },
+        ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
+        ["person_info"]: { id: 4, name: "інформація щодо особи, якій належить обʼєкт, і прав на нього" },
+    },
+    
+    ["step-data-11"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["income_source"]: { id: 1, name: "джерело (джерела) доходу" },
+        ["income_type"]: { id: 2, name: "вид доходу" },
+        ["amount"]: { id: 3, name: "розмір (вартість), грн" },
+        ["person_info"]: { id: 4, name: "інформація про особу, яка отримала дохід" },
+    },
+
+    ["step-data-12"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["institution_info"]: { id: 1, name: "загальна інформація про установу, в якій відкриті рахунки або до якої зроблені відповідні внески, чи про фізичну особу, якій позичено кошти" },
+        ["asset_type"]: { id: 2, name: "вид активу" },
+        ["asset_value"]: { id: 3, name: "розмір та валюта активу" },
+        ["object_info"]: { id: 4, name: "інформація про особу, якій належить обʼєкт, і прав на нього" },
+    },    
+
+    ["step-data-17"]: { // 12.2
+        ["num"]: { id: 0, name: "№" },
+        ["account_type_number"]: { id: 1, name: "тип та номер рахунка, індивідуального банківського сейфу (комірки)" },
+        ["owner_info"]: { id: 2, name: "інформація про фізичну або юридичну особу, яка має право розпоряджатися таким рахунком або має доступ до індивідуального банківського сейфу (комірки)" },
+        ["account_holder_info"]: { id: 3, name: "інформація про фізичну або юридичну особу, яка відкрила рахунок на ім’я суб’єкта декларування або членів його сім’ї" },
+        ["related_person_info"]: { id: 4, name: "інформація щодо особи, якої стосується" },
+    },
+
+    ["step-data-13"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["liability_type"]: { id: 1, name: "вид зобовʼязання" },
+        ["liability_info"]: { id: 2, name: "інформація про юридичну або фізичну особу, на користь якої виникло зобовʼязання" },
+        ["liability_date"]: { id: 3, name: "дата виникнення зобовʼязання" },
+        ["liability_currency"]: { id: 4, name: "валюта зобовʼязаная" },
+        ["loan_amount"]: { id: 5, name: "розмір позики (кредиту), отриманої у звітному періоді, або розмір зобовʼязання за позикою (кредитом) станом на початок звітного періоду" },
+        ["repayment_amount"]: { id: 6, name: "розмір сплачених у звітному періоді коштів у рахунок основної суми боргу за позикою (кредитом)" },
+        ["interest_amount"]: { id: 7, name: "розмір сплачених у звітному періоді процентів за позикою (кредитом)" },
+        ["liability_end_amount"]: { id: 8, name: "розмір зобовʼязання на кінець звітного періоду" },
+        ["guarantor_info"]: { id: 9, name: "інформація щодо поручителів та майнового забезпечення" },
+        ["liability_person_info"]: { id: 10, name: "інформація про особу, у якої виникло зобовʼязання" },
+    },
+
+    ["step-data-14"]: {
+        ["num"]: { id: 0, name: "№" },
+        ["transaction_type"]: { id: 1, name: "вид правочину" },
+        ["transaction_date"]: { id: 2, name: "дата вчинення правочину" },
+        ["subject"]: { id: 3, name: "предмет правочину" },
+        ["consequences"]: { id: 4, name: "наслідки правочину" },
+        ["expense_date"]: { id: 5, name: "дата здійснення разового видатку, спричиненого правочином (за наявності)" },
+        ["expense_amount"]: { id: 6, name: "розмір разового видатку (за наявності), грн" },
+        ["expense_country"]: { id: 7, name: "країна, у якій здійснено видаток" },
+    },
+
+    ["step-data-15"]: {},
+
+    ["step-data-16"]: {},
+
+    ["step-data-table_others_documents"]: {
+        ["code"]: { id: 0, name: "код" },
+        ["document_type"]: { id: 1, name: "тип документа" },
+        ["declaration_type"]: { id: 2, name: "тип декларації" },
+        ["period"]: { id: 3, name: "період" },
+        ["submission_date"]: { id: 4, name: "дата та час подання" }
+    }
+}
+
+const columnMapTransformations = {
+    ["fullname"]: { trans: (element) => consolidateFullName(element) },
+    ["fullname_abroad"]: { trans: (element) => consolidateFullName(element) },
+    ["location"]: { trans: (element) => joinAddress(element) },
+};
+
+const specificTableDataTransformations = {
+    ["step-data-7"]: { trans: (table, rows, stepSpec) => summarizeSecuritiesInStep7(table, rows, stepSpec) },
+    ["step-data-11"]: { trans: (table, rows, stepSpec) => summarizeMoneyInStep11(table, rows, stepSpec) },
+    ["step-data-12"]: { trans: (table, rows, stepSpec) => summarizeMoneyByCurrencyInStep12(table, rows, stepSpec) },
+};
+
+function cleanUnsufficientDataInCardBody(cardBody) {
+    const insufficientDataPattern = /\[Не відомо\]|(\[)?Не застосовується(\])?|\[Конфіденційна інформація\]/;
+    Array.from(cardBody.querySelectorAll("td")).forEach(td => {
+        if (td.children.length === 0 && insufficientDataPattern.test(td.textContent.trim())) {
+            td.textContent = "";
+        }
+    });
+    Array.from(cardBody.querySelectorAll("td>div")).forEach(div => {
+        if (insufficientDataPattern.test(div.innerText.trim())) {
+            div.innerHTML = "";
+        }
+    });
+}
+
+function lookAndProcessAllSteps() {
+    Object.keys(tableMetaSpecs).forEach(key => {
+        const stepSpec = tableMetaSpecs[key];
+
+        const card = document.getElementById(key);
+        const cardBody = card.querySelector(".card-body");
+        const pattern = /У суб'єкта декларування (чи членів його сім'ї )?відсутні об'єкти для декларування в цьому розділі\./;
+        if (pattern.test(cardBody.innerText.trim())) {
+            hideOrRemoveDomElement(card);
+            return;
+        }
+
+        cleanUnsufficientDataInCardBody(cardBody);
+
+        const table = card.querySelector("table.table");
+        if (!table) {
+            console.log(`Table with ID '${key}' not found.`);
+            return;
+        }
+        
+        // 1. apply transformation strategy for each column if exists
+        const rows = Array.from(table.rows);
+        rows.slice(1).forEach(row => {
+            Object.keys(stepSpec).forEach(columnKey => {
+                const columnMeta = stepSpec[columnKey];
+                const cell = row.cells[columnMeta.id];
+                if (cell) {
+                    const strategy = columnMapTransformations[columnKey];
+                    if (strategy) {
+                        strategy.trans(cell) ;
+                    }
+                }
+            });
+        });
+
+        // 2. apply transformation strategy for whole table if exists
+        const tableStrategy = specificTableDataTransformations[key];
+        if (tableStrategy) {
+            tableStrategy.trans(table, rows, stepSpec);
+        }
+    });
+}
+
 function hideOrRemoveDomElement(element) {
     if (element) {
         element.remove();
     }
 }
 
+function findXPathElements(xpath, context = document) {
+    const result = document.evaluate(xpath, context, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const elements = [];
+    for (let i = 0; i < result.snapshotLength; i++) {
+        elements.push(result.snapshotItem(i));
+    }
+    return elements;
+}
+
 function hideTargetElements(targetText) {
     // Використовуємо ваш уточнений XPath: батьківський div, 
     // у якого прямий нащадок (div або span) має потрібний текст
     // або має клас color-1 і містить цей текст
-    const xpaths = [  `//div[./span[contains(text(),'${targetText}')] or ./div[contains(text(),'${targetText}')]]`
-                    , `//div[./span[@class='color-1'] and contains(text(), '${targetText}')]`
-                    , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі."]]`
-                    , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування відсутні об'єкти для декларування в цьому розділі."]]`
-                   ];
+    const xpaths = [`//div[./span[contains(text(),'${targetText}')] or ./div[contains(text(),'${targetText}')]]`
+        , `//div[./span[@class='color-1'] and contains(text(), '${targetText}')]`
+        , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування чи членів його сім'ї відсутні об'єкти для декларування в цьому розділі."]]`
+        , `//div[@class="card" and ./div[@class="card-body" and normalize-space()="У суб'єкта декларування відсутні об'єкти для декларування в цьому розділі."]]`
+    ];
 
     xpaths.forEach(xpath => {
         const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -43,15 +258,13 @@ function toProperCase(text) {
     return text.toLowerCase().replace(/(^|\s)\S/g, (match) => match.toUpperCase());
 }
 
-function consolidateFullName() {
+function consolidateFullName(element) {
     // 1. Шукаємо всі div, які мають пряму дитину (span/div) з текстом "Прізвище:"
     const xpath = "//div[./*[normalize-space()='Прізвище:']]";
-    const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const result = findXPathElements(xpath, element);
 
     let isDefaultTitle = true;
-    for (let i = 0; i < result.snapshotLength; i++) {
-        const lastNameContainer = result.snapshotItem(i);
-
+    result.forEach(lastNameContainer => {
         // Отримуємо значення прізвища (зазвичай це другий елемент всередині div)
         const lastName = lastNameContainer.innerText.split(':')[1]?.trim() || "**Невідомо**";
 
@@ -83,7 +296,7 @@ function consolidateFullName() {
                 document.title = fullName;
             }
         }
-    }
+    });
 }
 
 function replaceText(targetText, replacementText) {
@@ -131,52 +344,17 @@ function findColumnByName(table, name) {
         .findIndex(th => th.textContent.toLowerCase() === name.toLowerCase()));
 }
 
-function tableStepNum(number, columnNames) {
-    const table = document.querySelector(`#step-data-${number} table.table`);
-    if (!table) {
-        return undefined;
-    }
-    return {
-        table,
-        columns: Object.fromEntries(
-            columnNames.map(name => [name, findColumnByName(table, name)])
-        )
-    };
-}
-
-const columnsInTableStep11 = {
-    ["amount"]: "Розмір (вартість), грн",
-    ["incomeRecipient"]: "Інформація про особу, яка отримала дохід"
-};
-
-function distinctMoneyRecipientsInStep11(tableSpec) {
-    const table = tableSpec.table;
-    const rows = table.rows;
-    const recipients = new Set();
-
-    const colRecipient = tableSpec.columns[columnsInTableStep11.incomeRecipient];
-    for (let i = 1; i < rows.length; i++) {
-        const recipientCell = rows[i].cells[colRecipient];
-        const recipient = recipientCell.innerText.trim();
-        if (recipient) {
-            recipients.add(recipient);
-        }
-    }
-    return recipients;
-}
-
-function summarizeMoneyInStep11(tableSpec) {
-    const table = tableSpec.table;
-    const rows = Array.from(table.rows);
-
-    const colAmount = tableSpec.columns[columnsInTableStep11.amount];
-    const colRecipient = tableSpec.columns[columnsInTableStep11.incomeRecipient];
+function summarizeMoneyInStep11(table, rows, tableSpec) {
     let total = 0.0;
     const amountsByRecipient = {};
-    distinctMoneyRecipientsInStep11(tableSpec)
+    const colAmount = tableSpec.amount.id;
+    const colRecipient = tableSpec.person_info.id;
+    const dataRows = rows.slice(1);
+    const uniqueRecipient = new Set(dataRows.map(row => row.cells[colRecipient].innerText.trim()));
+    uniqueRecipient
         .forEach(recipient => {
             amountsByRecipient[recipient] = 0;
-            rows.slice(1)
+            dataRows
                 .filter(row => row.cells[colRecipient].innerText.trim() === recipient)
                 .forEach(row => {
                     const amountCell = row.cells[colAmount];
@@ -207,15 +385,8 @@ function summarizeMoneyInStep11(tableSpec) {
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
 
-const columnsInTableStep12 = {
-    ["amountAndCurrency"]: "Розмір та валюта активу",
-};
-
-function summarizeMoneyByCurrencyInStep12(tableSpec) {
-    const table = tableSpec.table;
-    const rows = Array.from(table.rows);
-
-    const colAmountAndCurrency = tableSpec.columns[columnsInTableStep12.amountAndCurrency];
+function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
+    const colAmountAndCurrency = tableSpec.asset_value.id;
 
     const uniqueCurrencies = new Set();
     const pairsAmountAndCurrency = [];
@@ -251,16 +422,20 @@ function summarizeMoneyByCurrencyInStep12(tableSpec) {
 function transformAddress(data) {
     // 2. Формуємо скорочення та логіку відображення
     const parts = [];
-    
+
     const country = 'Країна';
     const region = 'Область';
+    const area = 'Автономна Республіка Крим/область/місто зі спеціальним статусом';
     const district = 'Район';
+    const districtInArea = 'Район в області та Автономній Республіці Крим';
     const community = 'Територіальна громада';
     const npTypeKey = 'Тип населеного пункту';
 
     if (data[country] && data[country] !== "Україна") parts.push(data[country]);
     if (data[region]) parts.push(`${data[region]} обл.`);
+    if (data[area]) parts.push(`${data[area]}`);
     if (data[district]) parts.push(`${data[district]} р-н`);
+    if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
     if (data[community]) parts.push(`${data[community]} ТГ`);
 
     // Визначаємо скорочення для типу населеного пункту
@@ -286,33 +461,19 @@ function transformAddress(data) {
     `;
 }
 
-function joinAddressPartsInTable(stepNumber, addressColumnIndex) {
-    const tableSpec = tableStepNum(stepNumber, []);
-    if (!tableSpec) return;
-    tableSpec.table
-        .querySelectorAll(`tr td:nth-child(${addressColumnIndex})`)
-        .forEach(cell => {
-            const rawText = cell.innerText.trim();
-            if (!rawText) return;
-            const jsonText = "{\"" + rawText.split("\n").map(e=>e.replace(": ", "\": \"")).join("\", \"") + "\"}";
-            const inData = JSON.parse(jsonText);
-            const newValue = transformAddress(inData);
-            cell.innerHTML = newValue;
-        });
+function joinAddress(cell) {
+    const rawText = cell.innerText.trim();
+    if (!rawText) return;
+    const jsonText = "{\"" + rawText.split("\n").map(e => e.replace(": ", "\": \"")).join("\", \"") + "\"}";
+    const inData = JSON.parse(jsonText);
+    const newValue = transformAddress(inData);
+    cell.innerHTML = newValue;
 }
 
-const columnsInTableStep7 = {
-    ["counts"]: "Кількість цінних паперів",
-    ["price"]: "Номінальна вартість одного цінного папера, грн",
-};
+function summarizeSecuritiesInStep7(table, rows, tableSpec) {
+    const colCounts = tableSpec.quantity.id;
+    const colPrice = tableSpec.nominal_value.id;
 
-function summarizeSecuritiesInStep7(tableSpec) {
-    const table = tableSpec.table;
-
-    const colCounts = tableSpec.columns[columnsInTableStep7.counts];
-    const colPrice = tableSpec.columns[columnsInTableStep7.price];
-
-    const rows = Array.from(table.rows);
     const totalSecurities = rows.slice(1)
         .map(row => {
             const getInnerValue = (index) => row.cells[index]?.innerText.trim() || "";
@@ -348,12 +509,13 @@ function addOnClickForAllCards() {
                     return true;
                 })
         })
-        
+
 }
 
-function addBadge(text, elementToAppend) {
+function addBadge() {
     const badgeDiv = document.createElement("div");
-    badgeDiv.textContent = text;
+    const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
+    badgeDiv.textContent = reportYear;
     Object.assign(badgeDiv.style, {
         position: 'fixed',
         zIndex: '300',
@@ -370,66 +532,17 @@ function addBadge(text, elementToAppend) {
         backgroundColor: 'coral',
         color: 'whitesmoke',
     });
-    elementToAppend.appendChild(badgeDiv);
+    (document.getElementById("nacp-toc") || document.body).appendChild(badgeDiv);
+
+    document.title = `${reportYear}: ${document.title}`;
 }
 
 function processPage() {
-    // тексти для приховування та заміни
-    const targetTexts = [
-        "Конфіденційна інформація",
-        "Не застосовується"
-    ];
-
-    targetTexts.forEach(targetText => {
-        hideTargetElements(targetText);
-        replaceTargetText(targetText);
-    });
-
-    const replacementPairs = [
-        ["Прізвище (відповідно до документа, що посвідчує особу)", "Прізвище:"],
-        ["Ім’я (відповідно до документа, що посвідчує особу)", "Ім’я:"],
-        ["Тип документа, що посвідчує особу", "Тип документа:"],
-        ["Автономна Республіка Крим/область/місто зі спеціальним статусом", "Область:"],
-        ["Район в області та Автономній Республіці Крим", "Район:"],
-        ["Код в Єдиному державному реєстрі юридичних осіб, фізичних осіб", "Код ЄДРПОУ:"],
-        ["Країна, в якій видано документ", "Країна:"],
-    ];
-    replacementPairs.forEach(([targetText, replacementText]) => {
-        replaceText(targetText, replacementText);
-    });
-
-    consolidateFullName();
-
-    hideEmplyStepData();
-    hideEmptyTableColumns();
-
-    const tab7 = tableStepNum(7, Object.keys(columnsInTableStep7).map(alias => columnsInTableStep7[alias]));
-    if(tab7) {
-        summarizeSecuritiesInStep7(tab7);
-    }
-    
-    const tab11 = tableStepNum(11, Object.keys(columnsInTableStep11).map(alias => columnsInTableStep11[alias]));
-    if(tab11) {
-        summarizeMoneyInStep11(tab11);
-    }
-    
-    const tab12 = tableStepNum(12, Object.keys(columnsInTableStep12).map(alias => columnsInTableStep12[alias]));
-    if(tab12) {
-        summarizeMoneyByCurrencyInStep12(tab12);
-    }
-
-    joinAddressPartsInTable(2, 10);
-    joinAddressPartsInTable(3, 3);
-    joinAddressPartsInTable(4, 3);
-
-    const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
-    addBadge(
-        reportYear,
-        document.getElementById("nacp-toc") || document.body
-    );
-    document.title = `${reportYear}: ${document.title}`;
+    lookAndProcessAllSteps();
 
     addOnClickForAllCards();
+
+    addBadge();
 }
 
 // Запускаємо при завантаженні
