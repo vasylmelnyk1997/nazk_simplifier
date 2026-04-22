@@ -146,7 +146,8 @@ const columnMapTransformations = {
     ["location"]: { trans: (element) => joinAddress(element) },
 };
 
-const specificTableDataTransformations = {
+const specificStepDataTransformations = {
+    ["step-data-0"]: { titleExpand: (cardTitle, cardBody, rows, stepSpec) => titleExpand0(cardTitle, cardBody, rows, stepSpec) },
     ["step-data-3"]: { trans: (table, rows, stepSpec) => summarizeObjValuesInStep3(table, rows, stepSpec) },
     ["step-data-7"]: { trans: (table, rows, stepSpec) => summarizeSecuritiesInStep7(table, rows, stepSpec) },
     ["step-data-11"]: { trans: (table, rows, stepSpec) => summarizeMoneyInStep11(table, rows, stepSpec) },
@@ -181,31 +182,36 @@ function lookAndProcessAllSteps() {
 
         cleanUnsufficientDataInCardBody(cardBody);
 
+        let rows = [];
         const table = card.querySelector("table.table");
-        if (!table) {
-            console.log(`Table with ID '${key}' not found.`);
-            return;
+        if (table) {
+            // 1. apply transformation strategy for each column if exists
+            rows = Array.from(table.rows);
+            rows.slice(1).forEach(row => {
+                Object.keys(stepSpec).forEach(columnKey => {
+                    const columnMeta = stepSpec[columnKey];
+                    const cell = row.cells[columnMeta.id];
+                    if (cell) {
+                        const strategy = columnMapTransformations[columnKey];
+                        if (strategy) {
+                            strategy.trans(cell) ;
+                        }
+                    }
+                });
+            });
+
+            // 2. apply transformation strategy for whole table if exists
+            const tableStrategy = specificStepDataTransformations[key]?.trans;
+            if (tableStrategy) {
+                tableStrategy(table, rows, stepSpec);
+            }
         }
         
-        // 1. apply transformation strategy for each column if exists
-        const rows = Array.from(table.rows);
-        rows.slice(1).forEach(row => {
-            Object.keys(stepSpec).forEach(columnKey => {
-                const columnMeta = stepSpec[columnKey];
-                const cell = row.cells[columnMeta.id];
-                if (cell) {
-                    const strategy = columnMapTransformations[columnKey];
-                    if (strategy) {
-                        strategy.trans(cell) ;
-                    }
-                }
-            });
-        });
-
-        // 2. apply transformation strategy for whole table if exists
-        const tableStrategy = specificTableDataTransformations[key];
-        if (tableStrategy) {
-            tableStrategy.trans(table, rows, stepSpec);
+        // 3. expand title for a card
+        const titleStrategy = specificStepDataTransformations[key]?.titleExpand;
+        if (titleStrategy) {
+            const cardTitle = card.querySelector(".card-header .card-header-title .title");
+            titleStrategy(cardTitle, cardBody, rows, stepSpec);
         }
     });
 }
@@ -297,6 +303,13 @@ function hideEmptyTableColumns() {
         cellsToHide.forEach(cell => hideDomElement(cell));
     });    
 }    
+
+function titleExpand0(cardTitle, cardBody, rows, stepSpec) {
+    const firstRow = cardBody.querySelector(".row");
+    const description = firstRow?.children[0].children[0].innerText.trim().toLowerCase() || "?";
+    const year = firstRow?.children[1].innerText.trim() || "?";
+    cardTitle.innerText += ` [${description}: ${year}]`;
+}
 
 function summarizeObjValuesInStep3(table, rows, tableSpec) {
     const colValue = tableSpec.value.id;
