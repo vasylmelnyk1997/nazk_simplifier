@@ -177,6 +177,11 @@ function cleanUnsufficientDataInCardBody(cardBody) {
             removeDomElement(item);
         }    
     });
+    Array.from(cardBody.querySelectorAll(".row")).forEach(row => {
+        if (insufficientDataPattern.test(row.innerText.trim())) {
+            removeDomElement(row);
+        }    
+    });
 }
 
 function lookAndProcessAllSteps() {
