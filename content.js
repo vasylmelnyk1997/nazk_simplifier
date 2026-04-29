@@ -161,10 +161,21 @@ function cleanUnsufficientDataInCardBody(cardBody) {
             td.textContent = "";
         }
     });
+    Array.from(cardBody.querySelectorAll("td>div>div")).forEach(div => {
+        if (insufficientDataPattern.test(div.innerText.trim())) {
+            div.innerHTML = "";
+        }
+    });
     Array.from(cardBody.querySelectorAll("td>div")).forEach(div => {
         if (insufficientDataPattern.test(div.innerText.trim())) {
             div.innerHTML = "";
         }
+    });
+    // clean around the table
+    Array.from(cardBody.querySelectorAll(".info-item")).forEach(item => {
+        if (insufficientDataPattern.test(item.innerText.trim())) {
+            removeDomElement(item);
+        }    
     });
 }
 
@@ -173,6 +184,11 @@ function lookAndProcessAllSteps() {
         const stepSpec = tableMetaSpecs[key];
 
         const card = document.getElementById(key);
+        if (!card) {
+            console.warn(`Card with id ${key} not found`);
+            return;
+        }
+
         const cardBody = card.querySelector(".card-body");
         const pattern = /У суб'єкта декларування (чи членів його сім'ї )?відсутні об'єкти для декларування в цьому розділі\./;
         if (pattern.test(cardBody.innerText.trim())) {
