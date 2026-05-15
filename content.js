@@ -411,7 +411,7 @@ function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
     rows.slice(1)
         .forEach(row => {
             const amountAndCurrencyElements = row.cells[colAmountAndCurrency].querySelectorAll('.row .col-12 span:nth-child(2)');
-            const amount = parseFloat(amountAndCurrencyElements[0].innerText.trim()) || 0;
+            const amount = parseFloat(amountAndCurrencyElements[0]?.innerText.trim()) || 0;
             const currency = amountAndCurrencyElements[1]?.innerText.trim().slice(0, 3) || "undef";
             pairsAmountAndCurrency.push({ amount, currency });
             uniqueCurrencies.add(currency);
@@ -480,7 +480,7 @@ function transformAddress(data) {
 
 function joinAddress(cell) {
     const rawText = cell.innerText.trim();
-    if (!rawText) return;
+    if (!rawText || rawText === "Не зареєстрований") return;
     const jsonText = "{\"" + rawText.split("\n").map(e => e.replace(": ", "\": \"")).join("\", \"") + "\"}";
     const inData = JSON.parse(jsonText);
     const newValue = transformAddress(inData);
