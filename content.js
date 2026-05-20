@@ -437,8 +437,10 @@ function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
 }    
 
 function transformAddress(data) {
-    // 2. Формуємо скорочення та логіку відображення
-    const parts = [];
+    let parts = [];
+
+    let legacy = false;
+    const placeOfLiving = 'Населений пункт';
 
     const country = 'Країна';
     const region = 'Область';
@@ -448,26 +450,69 @@ function transformAddress(data) {
     const community = 'Територіальна громада';
     const npTypeKey = 'Тип населеного пункту';
 
-    if (data[country] && data[country] !== "Україна") parts.push(data[country]);
-    if (data[region]) parts.push(`${data[region]} обл.`);
-    if (data[area]) parts.push(`${data[area]}`);
-    if (data[district]) parts.push(`${data[district]} р-н`);
-    if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
-    if (data[community]) parts.push(`${data[community]} ТГ`);
+    function transformAddressLegacy(data) {
+        if (!data) return [];
+        const livingPlaceParts = data.split('/').toReversed() || [];
+        const skipCountry = livingPlaceParts[0].trim() === "Україна"? 1: 0;
+        return livingPlaceParts.slice(skipCountry).map(part => part.trim());
+    }
 
-    // Визначаємо скорочення для типу населеного пункту
-    let npType = '';
-    if (data[npTypeKey]) {
-        const type = data[npTypeKey].toLowerCase();
-        if (type === 'село') npType = 'с.';
-        else if (type === 'місто') npType = 'м.';
-        else if (type.startsWith('селище')) npType = 'с-ще';
-    }    
+    function transformAddressNew(data) {
+        const parts = [];
 
-    const placeOfLiving = 'Населений пункт';
-    if (data[placeOfLiving]) {
-        parts.push(`${npType} ${data[placeOfLiving]}`.trim());
-    }    
+        if (data[country] && data[country] !== "Україна") parts.push(data[country]);
+        if (data[region]) parts.push(`${data[region]} обл.`);
+        if (data[area]) parts.push(`${data[area]}`);
+        if (data[district]) parts.push(`${data[district]} р-н`);
+        if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
+        if (data[community]) parts.push(`${data[community]} ТГ`);
+
+        // Визначаємо скорочення для типу населеного пункту
+        let npType = '';
+        if (data[npTypeKey]) {
+            const type = data[npTypeKey].toLowerCase();
+            if (type === 'село') npType = 'с.';
+            else if (type === 'місто') npType = 'м.';
+            else if (type.startsWith('селище')) npType = 'с-ще';
+        }    
+
+        if (data[placeOfLiving]) {
+            parts.push(`${npType} ${data[placeOfLiving]}`.trim());
+        }    
+
+        return parts;
+    }
+
+
+    if (Object.keys(data).length === 2 && 
+        data[country] &&
+        data[placeOfLiving]) {
+        legacy = true;
+    }
+
+    if (legacy) {
+        parts = transformAddressLegacy(data[placeOfLiving]);
+    } else {
+        if (data[country] && data[country] !== "Україна") parts.push(data[country]);
+        if (data[region]) parts.push(`${data[region]} обл.`);
+        if (data[area]) parts.push(`${data[area]}`);
+        if (data[district]) parts.push(`${data[district]} р-н`);
+        if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
+        if (data[community]) parts.push(`${data[community]} ТГ`);
+
+        // Визначаємо скорочення для типу населеного пункту
+        let npType = '';
+        if (data[npTypeKey]) {
+            const type = data[npTypeKey].toLowerCase();
+            if (type === 'село') npType = 'с.';
+            else if (type === 'місто') npType = 'м.';
+            else if (type.startsWith('селище')) npType = 'с-ще';
+        }    
+
+        if (data[placeOfLiving]) {
+            parts.push(`${npType} ${data[placeOfLiving]}`.trim());
+        }    
+    }
 
     // 3. Створюємо новий HTML вміст
     return `
