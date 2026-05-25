@@ -437,9 +437,6 @@ function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
 }    
 
 function transformAddress(data) {
-    let parts = [];
-
-    let legacy = false;
     const placeOfLiving = 'Населений пункт';
 
     const country = 'Країна';
@@ -461,8 +458,8 @@ function transformAddress(data) {
         const parts = [];
 
         if (data[country] && data[country] !== "Україна") parts.push(data[country]);
+        if (data[area]) parts.push(`${data[area]} обл.`);
         if (data[region]) parts.push(`${data[region]} обл.`);
-        if (data[area]) parts.push(`${data[area]}`);
         if (data[district]) parts.push(`${data[district]} р-н`);
         if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
         if (data[community]) parts.push(`${data[community]} ТГ`);
@@ -483,36 +480,13 @@ function transformAddress(data) {
         return parts;
     }
 
+    const legacy = Object.keys(data).length === 2
+                && data[country]
+                && data[placeOfLiving];
 
-    if (Object.keys(data).length === 2 && 
-        data[country] &&
-        data[placeOfLiving]) {
-        legacy = true;
-    }
-
-    if (legacy) {
-        parts = transformAddressLegacy(data[placeOfLiving]);
-    } else {
-        if (data[country] && data[country] !== "Україна") parts.push(data[country]);
-        if (data[region]) parts.push(`${data[region]} обл.`);
-        if (data[area]) parts.push(`${data[area]}`);
-        if (data[district]) parts.push(`${data[district]} р-н`);
-        if (data[districtInArea]) parts.push(`${data[districtInArea]} р-н`);
-        if (data[community]) parts.push(`${data[community]} ТГ`);
-
-        // Визначаємо скорочення для типу населеного пункту
-        let npType = '';
-        if (data[npTypeKey]) {
-            const type = data[npTypeKey].toLowerCase();
-            if (type === 'село') npType = 'с.';
-            else if (type === 'місто') npType = 'м.';
-            else if (type.startsWith('селище')) npType = 'с-ще';
-        }    
-
-        if (data[placeOfLiving]) {
-            parts.push(`${npType} ${data[placeOfLiving]}`.trim());
-        }    
-    }
+    const parts = legacy  
+            ? transformAddressLegacy(data[placeOfLiving])
+            : transformAddressNew(data);
 
     // 3. Створюємо новий HTML вміст
     return `
