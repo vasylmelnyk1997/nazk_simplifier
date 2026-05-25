@@ -31,6 +31,24 @@ const tableMetaSpecs = {
         ["location"]: { id: 2, name: "місцезнаходження обʼєкта" },
         ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
         ["info"]: { id: 4, name: "інформація щодо особи, якій належить об’єкт, і прав на нього" },
+        ["desc_fn"]: (table, rows, stepSpec) => {
+            const arrResult = parseRealEstateTable(table, rows, stepSpec);
+            
+            // Create container div for results
+            const resultContainer = document.createElement('div');
+            resultContainer.className = 'real-estate-results';
+            
+            // Create div for each result
+            arrResult.forEach((result) => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'real-estate-item';
+                resultDiv.textContent = result;
+                resultContainer.appendChild(resultDiv);
+            });
+            
+            // Insert container before table
+            table.parentNode.insertBefore(resultContainer, table);
+        },
     },
 
     ["step-data-4"]: {},
@@ -225,6 +243,11 @@ function lookAndProcessAllSteps() {
             const tableStrategy = specificStepDataTransformations[key]?.trans;
             if (tableStrategy) {
                 tableStrategy(table, rows, stepSpec);
+            }
+
+            // 3. get description for the card if exists
+            if (stepSpec.desc_fn) {
+                stepSpec.desc_fn(table, rows, stepSpec);
             }
         }
         
@@ -550,6 +573,85 @@ function addBadge() {
     (document.getElementById("nacp-toc") || document.body).appendChild(badgeDiv);
 
     document.title = `${reportYear}: ${document.title}`;
+}
+
+function parseRealEstateTable(table, rows, stepSpec) {
+    objType = "Вид об'єкта";
+    objType2 = "Інший вид об'єкта";
+    objDate = "Дата набуття права";
+    objAreaHectar = "Загальна площа (га)";
+    objAreaM2 = "Загальна площа (м2)";
+    objAddress = "Адреса";
+    objOwnership = "Власність";
+
+    const results = [];
+    rows
+        .forEach((row, index) => {
+        if (index === 0) return; // Пропускаємо заголовок таблиці
+        
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 5) return; // Пропускаємо некоректні рядки
+
+        const locationData = cells[2].innerText.trim();
+        const text = cells[1].innerText.trim() + (locationData === "" ? "" : `\n${locationData}`);
+        
+        const rawJson = "{\""
+        + text.split("\n").map(e => e.split(":").map(s => s.trim()).join("\": \"")).join("\", \"")
+        + "\"}";
+        const data = JSON.parse(rawJson);
+
+        // 3. Адреса з третьої комірки (збираємо повний ланцюжок наявних гео-даних)
+        const cellLocation = cells[2].innerText.trim() ? cells[2] : null;
+
+        // 4. Розрахунок частки з п'ятої комірки права власності
+        const cellRights = cells[4];
+        let shareText = "";
+        
+        const othersRights = "інше право користування";
+        const ownRights = "власність";
+        const partRights = "спільна сумісна";
+
+        const rightsText = cellRights.innerText.trim().toLowerCase();
+        if (rightsText.includes(ownRights) && !rightsText.includes(partRights)) {
+            shareText = `, ${othersRights}`;
+        } else if (rightsText.includes(partRights)) {
+            // Шукаємо відсоток/частку в тексті (наприклад, "Частка (%): 50" або "50%")
+            const shareMatch = cellRights.innerHTML.match(/(?:Частка\s*\(.*?\):?)\s*<span>\s*([\d,\/]+)\s*<\/span>/i) 
+                               || cellRights.textContent.match(/Частка[^:]*:\s*([\d,\/]+)/i);
+            if (shareMatch && shareMatch[1]) {
+                shareText = `, частка: ${shareMatch[1]}%`;
+            } else {
+                const cnt = rightsText.split("\n").reduce((acc, line) => {
+                    return line.trim().slice(0, 3)==="піб" ? acc + 1 : acc;
+                }, 0);
+                shareText = `, частка: 1/${cnt || 1}`;
+            }
+        } else if (rightsText.includes("власність") && !rightsText.includes("спільна")) {
+            // Одноосібна власність — частку не вказуємо згідно з ТЗ
+            shareText = "";
+        } else {
+            // Інші види прав (оренда, користування тощо)
+            const rightTypeMatch = cellRights.querySelector('span') || cellRights;
+            if (rightTypeMatch) {
+                const rightType = rightTypeMatch.textContent.trim().split('\n')[0];
+                if(rightType && rightType !== "[Не застосовується]") {
+                     shareText = `, право: ${rightType}`;
+                }
+            }
+        }
+
+        const areaSquare = data[objAreaM2]
+            ? `${data[objAreaM2]} м²`
+            : (data[objAreaHectar]
+                ? `${data[objAreaHectar]} га`
+                : "площа не вказана");
+        
+        // Форматуємо підсумковий рядок для поточного об'єкта
+        const record = `${index}) ${data[objType].toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${shareText};`;
+        results.push(record);
+    });
+
+    return results;
 }
 
 function processPage() {
