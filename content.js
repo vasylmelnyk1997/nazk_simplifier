@@ -1,6 +1,39 @@
+let fullName = (() => {
+    const card = document.getElementById("step-data-1");
+    if (!card) {
+        console.warn(`Card with id step-data-1 not found`);
+        return "";
+    }
+    const rawData = card.querySelector(".card-body fieldset").innerText.trim();
+
+    const fldSurname = "Прізвище:";
+    const fldName = "Імʼя:";
+    const fldMiddlename = "По батькові (за наявності):";
+
+    const rawArray = rawData.split("\n");
+    const extractValue = (fld) => rawArray.find(line => line.startsWith(fld))?.split(fld)[1].trim() || "";
+    const surname = extractValue(fldSurname);
+    const name = extractValue(fldName);
+    const middlename = extractValue(fldMiddlename);
+    return `${surname} ${name} ${middlename}`.trim();
+})();
+
 const hoverCardbodyStyle = document.createElement("style");
 hoverCardbodyStyle.id = 'hoverCardbodyStyle_id';
-hoverCardbodyStyle.textContent = ".card-header:hover { background-color: #eee; cursor: pointer; } ";
+hoverCardbodyStyle.innerText = `
+.card-header:hover { 
+    background-color: #eee; cursor: pointer; 
+} 
+.real-estate-results {
+    margin-bottom: 15px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px; 
+}
+.real-estate-item {
+    padding: 2px 0;
+}
+`;
 (document.head || document.documentElement).appendChild(hoverCardbodyStyle);
 
 const tableMetaSpecs = {
@@ -576,6 +609,7 @@ function addBadge() {
 }
 
 function parseRealEstateTable(table, rows, stepSpec) {
+    // TBD: need to optimize by using stepSpec for dynamic column indexing instead of hardcoding column numbers
     objType = "Вид об'єкта";
     objType2 = "Інший вид об'єкта";
     objDate = "Дата набуття права";
@@ -609,26 +643,39 @@ function parseRealEstateTable(table, rows, stepSpec) {
         
         const othersRights = "інше право користування";
         const ownRights = "власність";
-        const partRights = "спільна сумісна";
+        const partRights = "спільна";
 
         const rightsText = cellRights.innerText.trim().toLowerCase();
-        if (rightsText.includes(ownRights) && !rightsText.includes(partRights)) {
+        const rightsArray = rightsText.split("\n").map(s => s.trim());
+        const fnCountNames = () => rightsArray.reduce((acc, line) => line.startsWith("піб") ? acc + 1 : acc, 0);
+
+        if (rightsText.startsWith(othersRights) && !rightsText.includes(partRights)) {
             shareText = `, ${othersRights}`;
-        } else if (rightsText.includes(partRights)) {
+        } else if (rightsText.startsWith(partRights)) {
             // Шукаємо відсоток/частку в тексті (наприклад, "Частка (%): 50" або "50%")
             const shareMatch = cellRights.innerHTML.match(/(?:Частка\s*\(.*?\):?)\s*<span>\s*([\d,\/]+)\s*<\/span>/i) 
                                || cellRights.textContent.match(/Частка[^:]*:\s*([\d,\/]+)/i);
             if (shareMatch && shareMatch[1]) {
                 shareText = `, частка: ${shareMatch[1]}%`;
             } else {
-                const cnt = rightsText.split("\n").reduce((acc, line) => {
-                    return line.trim().slice(0, 3)==="піб" ? acc + 1 : acc;
-                }, 0);
-                shareText = `, частка: 1/${cnt || 1}`;
+                shareText = `, частка: 1/${fnCountNames() || 1}`;
             }
-        } else if (rightsText.includes("власність") && !rightsText.includes("спільна")) {
+        } else if (rightsText.startsWith(ownRights) && !rightsText.includes(partRights)) {
             // Одноосібна власність — частку не вказуємо згідно з ТЗ
-            shareText = "";
+            const regExFullName = new RegExp(`піб\:\s*${fullName}`, "i");
+            const regExNameMoreThanOne = new RegExp(`піб\:\s*піб\:`, "i");
+
+            const isOwner = regExFullName.test(rightsText);
+            const notOnlyOwner = regExNameMoreThanOne.test(rightsText);
+            if (isOwner && !notOnlyOwner) {
+                shareText = "";
+            } else if (!isOwner && !notOnlyOwner) {
+                const pibMatch = rightsText.match(/піб\:\s*([а-яіїєґ\']*(\s+?)){1,3}/i);
+                const pibWords = pibMatch ? pibMatch[1].trim() : "";
+                shareText = `, власність: ${pibWords}`;
+            } else if (isOwner && notOnlyOwner) {
+                shareText = ", власність: спільна з іншими особами";
+            }
         } else {
             // Інші види прав (оренда, користування тощо)
             const rightTypeMatch = cellRights.querySelector('span') || cellRights;
@@ -645,9 +692,14 @@ function parseRealEstateTable(table, rows, stepSpec) {
             : (data[objAreaHectar]
                 ? `${data[objAreaHectar]} га`
                 : "площа не вказана");
+
+        const objTypeValue = data[objType]?.toLowerCase() === "інше"
+            ? data[objType2]
+            : data[objType]
+            || "невідомий тип об'єкта";
         
         // Форматуємо підсумковий рядок для поточного об'єкта
-        const record = `${index}) ${data[objType].toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${shareText};`;
+        const record = `${index}) ${objTypeValue.toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${shareText};`;
         results.push(record);
     });
 
