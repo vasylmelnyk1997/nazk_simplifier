@@ -693,7 +693,7 @@ function parseRealEstateTable(table, rows, stepSpec) {
                 rightsNotes.push(", " + checkOwnTypeTxt);
         }
 
-        const shareText = rightsNotes.length > 0 ? rightsNotes.join('') : "";
+        const objOwnRights = rightsNotes.length > 0 ? rightsNotes.join('') : "";
 
         const areaSquare = data[objAreaM2]
             ? `${data[objAreaM2]} м²`
@@ -706,8 +706,11 @@ function parseRealEstateTable(table, rows, stepSpec) {
             : data[objType]
             || "невідомий тип об'єкта";
         
+        const specifiedCost = +row.cells[3].innerText.split("\n")[0] || 0;
+        const objPrice = specifiedCost > 0 ? `, вартість: ${specifiedCost} грн` : "";
+
         // Форматуємо підсумковий рядок для поточного об'єкта
-        const record = `${index}) ${objTypeValue.toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${shareText};`;
+        const record = `${index}) ${objTypeValue.toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${objOwnRights}${objPrice};`;
         results.push(record);
     });
 
