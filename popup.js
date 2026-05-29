@@ -1,38 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const ACTION_GET_STATE = 'getHideNazkUnsuficientDataState';
-    const ACTION_TOGGLE = 'toggleHideNazkUnsuficientData';
+// TBD: add some logic to the popup, e.g., to show the current status of the content script or to allow toggling the hiding functionality on and off.
 
-    const toggleBtn = document.getElementById('toggleBtn');
-    const statusEl = document.getElementById('status');
-
-    function setStatus(enabled) {
-        statusEl.textContent = enabled ? 'Hide mode: ON' : 'Hide mode: OFF';
-    }
-
-    function handleError(action) {
-        statusEl.textContent = `Page content script not available. Source: ${action}.`;
-        toggleBtn.disabled = true;
-    }
-
-    function refreshState() {
-        chrome.runtime.sendMessage({ action: ACTION_GET_STATE }, response => {
-            if (chrome.runtime.lastError || !response) {
-                handleError(ACTION_GET_STATE);
-                return;
-            }
-            setStatus(response.enabled);
-        });
-    }
-
-    toggleBtn.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: ACTION_TOGGLE }, response => {
-            if (chrome.runtime.lastError || !response) {
-                handleError(ACTION_TOGGLE);
-                return;
-            }
-            setStatus(response.enabled);
-        });
-    });
-
-    refreshState();
+document.addEventListener('DOMContentLoaded', function() {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = 'NAZK Simplifier is ready.';
 });
