@@ -32,27 +32,41 @@ const tableMetaSpecsDef = {
             ["demographic_id"]: { id: 8, name: "унікальний номер запису в єдиному державному демографічному реєстрі (за наявності)" },
             ["location"]: { id: 9, name: "зареєстроване місце проживання" },
         },
-
+/*
+step-data-3 -- інша версія таблиці
+№
+загальна інформація
+місцезнаходження
+вартість на дату набуття
+вартість за останньою оцінкою
+інформація щодо прав на об'єкт
+*/
         ["step-data-3"]: {
             ["num"]: { id: 0, name: "№" },
             ["type_characteristics"]: { id: 1, name: "вид та характеристика обʼєкта, дата набуття права" },
             ["location"]: { id: 2, name: "місцезнаходження обʼєкта" },
             ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
             ["info"]: { id: 4, name: "інформація щодо особи, якій належить об'єкт, і прав на нього" },
-            ["desc_fn"]: (table, rows, stepSpec) => {
-                const arrResult = parseRealEstateTable(table, rows, stepSpec);
+            ["desc_fn"]: (table, stepSpec) => {
+                // tech debt
+                // test case: Явтушенко Олександр Миколайович, 2017
+                try {
+                    const arrResult = parseRealEstateTable(table, stepSpec);
 
-                const resultContainer = document.createElement('div');
-                resultContainer.className = 'real-estate-results';
+                    const resultContainer = document.createElement('div');
+                    resultContainer.className = 'real-estate-results';
 
-                arrResult.forEach((result) => {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'real-estate-item';
-                    resultDiv.textContent = result;
-                    resultContainer.appendChild(resultDiv);
-                });
+                    arrResult.forEach((result) => {
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'real-estate-item';
+                        resultDiv.textContent = result;
+                        resultContainer.appendChild(resultDiv);
+                    });
 
-                table.parentNode.insertBefore(resultContainer, table);
+                    table.parentNode.insertBefore(resultContainer, table);
+                } catch (error) {
+                    console.error("Error occurred while processing real estate table:", error);
+                }
             },
         },
 
