@@ -27,24 +27,6 @@ const declaringPerson = (() => {
     return toProperCase(`${surname} ${name} ${middlename}`);
 })();
 
-const nazkExtStyles = document.createElement("style");
-nazkExtStyles.id = 'hoverCardbodyStyle_id';
-nazkExtStyles.innerText = `
-.card-header:hover {
-    background-color: #eee; cursor: pointer;
-}
-.real-estate-results {
-    margin-bottom: 15px;
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-.real-estate-item {
-    padding: 2px 0;
-}
-`;
-(document.head || document.documentElement).appendChild(nazkExtStyles);
-
 function cleanUnsufficientDataInCardBody(cardBody) {
     const pattern = /\[Не відомо\]|(\[)?Не застосовується(\])?|\[Конфіденційна інформація\]/;
     const isInsufficient = el => pattern.test(el.innerText.trim());
@@ -411,28 +393,28 @@ function addOnClickForAllCards() {
 }
 
 function addBadge() {
-    const badgeDiv = document.createElement("div");
     const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
-    badgeDiv.textContent = reportYear;
-    Object.assign(badgeDiv.style, {
-        position: 'fixed',
-        zIndex: '300',
-        top: '0',
-        left: '50px',
-        padding: '0 12px',
-        border: '1px solid #bbb',
-        borderTopRightRadius: '0',
-        borderTopLeftRadius: '0',
-        borderBottomRightRadius: '4px',
-        borderBottomLeftRadius: '4px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        backgroundColor: 'coral',
-        color: 'whitesmoke',
-    });
+
+    const badgeDiv = document.createElement("div");
+    badgeDiv.className = "year-badge";
+    
+    const navItemDiv = document.createElement("div");
+    navItemDiv.className = "nav-item";
+    
+    const yearDiv = document.createElement("div");
+    yearDiv.textContent = reportYear;
+    
+    const ddlDiv = document.createElement("div");
+    ddlDiv.className = "dropdown";
+    ddlDiv.innerHTML = tableMetaSpecs["step-data-table_others_documents"].desc_fn_result || "Документи";
+
+    navItemDiv.appendChild(yearDiv);
+    navItemDiv.appendChild(ddlDiv);
+    badgeDiv.appendChild(navItemDiv);
+
     (document.getElementById("nacp-toc") || document.body).appendChild(badgeDiv);
 
-    document.title = `${reportYear}: ${document.title}`;
+    document.title = `${reportYear}: ${declaringPerson}`;
 }
 
 function parseRealEstateTable(table, stepSpec) {

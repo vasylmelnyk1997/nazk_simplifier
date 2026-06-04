@@ -173,7 +173,23 @@ step-data-3 -- інша версія таблиці
             ["document_type"]: { id: 1, name: "тип документа" },
             ["declaration_type"]: { id: 2, name: "тип декларації" },
             ["period"]: { id: 3, name: "період" },
-            ["submission_date"]: { id: 4, name: "дата та час подання" }
+            ["submission_date"]: { id: 4, name: "дата та час подання" },
+            ["desc_fn"]: (table, stepSpec) => {
+                try {
+                    const rows = table.rows;
+                    stepSpec["desc_fn_result"] = "";
+                    for (let i = 1; i < rows.length; i++) {
+                        const cells = rows[i].cells;
+                        const id = cells[0].textContent.trim();
+                        const docType = cells[1].textContent.trim();
+                        const declType = cells[2].textContent.trim();
+                        const period = cells[3].textContent.trim();
+                        stepSpec["desc_fn_result"] += `<div><a href="https://public.nazk.gov.ua/documents/${id}" target="_blank">${period} ${docType} ${declType}</a></div>`;
+                    }
+                } catch (error) {
+                    console.error("Error occurred while processing real estate table:", error);
+                }
+            },
         }
     },
     [DOCTYPE.CHANGES]: {
