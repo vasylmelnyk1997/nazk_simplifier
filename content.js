@@ -1,3 +1,9 @@
+const docTypeText = document
+    .querySelector("#step .card-body .row:nth-child(2) div:nth-child(2)")
+    .textContent.trim().toLowerCase();
+
+const tableMetaSpecs = getTableMetaSpec(docTypeText);
+
 const declaringPerson = (() => {
     const card = document.getElementById("step-data-1");
     if (!card) {
@@ -40,38 +46,51 @@ nazkExtStyles.innerText = `
 (document.head || document.documentElement).appendChild(nazkExtStyles);
 
 function cleanUnsufficientDataInCardBody(cardBody) {
-    const insufficientDataPattern = /\[Не відомо\]|(\[)?Не застосовується(\])?|\[Конфіденційна інформація\]/;
-    Array.from(cardBody.querySelectorAll("td")).forEach(td => {
-        if (td.children.length === 0 && insufficientDataPattern.test(td.textContent.trim())) {
-            td.textContent = "";
+    const pattern = /\[Не відомо\]|(\[)?Не застосовується(\])?|\[Конфіденційна інформація\]/;
+    const isInsufficient = el => pattern.test(el.innerText.trim());
+    
+    cardBody.querySelectorAll("td").forEach(td => {
+        if (td.children.length === 0 && isInsufficient(td)) td.textContent = "";
+    });
+    
+    const fnCleanInnerHtml = (el) => {
+        if (isInsufficient(el)) el.innerHTML = "";
+    };
+    cardBody.querySelectorAll("td>div>div").forEach(fnCleanInnerHtml);
+    cardBody.querySelectorAll("td>div").forEach(fnCleanInnerHtml);
+
+    const fnRemoveElementIf = el => {
+        if (isInsufficient(el)) removeDomElement(el);
+    };
+    cardBody.querySelectorAll(".info-item").forEach(fnRemoveElementIf);
+    cardBody.querySelectorAll(".row").forEach(fnRemoveElementIf);
+}
+
+function hideCardIfNoData(card, cardBody) {
+    const pattern = /У суб'єкта декларування (чи членів його сім'ї )?відсутні об'єкти для декларування в цьому розділі\./;
+    if (pattern.test(cardBody.innerText.trim())) {
+        hideDomElement(card);
+    }
+}
+
+function updateCellIds(table, stepSpecs) {
+    const rows = table.rows;
+    Object.keys(stepSpecs).forEach(columnKey => {
+        const columnMeta = stepSpecs[columnKey];
+        for (let i = 0; i < rows[0].cells.length; i++) {
+            const cellName = rows[0].cells[i].innerText.trim().toLowerCase().replace(/[^а-яєїі]/g,'') ;
+            const metaName = columnMeta.name.toLowerCase().replace(/[^а-яєїі]/g, '');
+            if (cellName === metaName) {
+                columnMeta.realId = i; // update column id in spec based on actual table structure
+                break;
+            }
         }
-    });
-    Array.from(cardBody.querySelectorAll("td>div>div")).forEach(div => {
-        if (insufficientDataPattern.test(div.innerText.trim())) {
-            div.innerHTML = "";
-        }
-    });
-    Array.from(cardBody.querySelectorAll("td>div")).forEach(div => {
-        if (insufficientDataPattern.test(div.innerText.trim())) {
-            div.innerHTML = "";
-        }
-    });
-    // clean around the table
-    Array.from(cardBody.querySelectorAll(".info-item")).forEach(item => {
-        if (insufficientDataPattern.test(item.innerText.trim())) {
-            removeDomElement(item);
-        }    
-    });
-    Array.from(cardBody.querySelectorAll(".row")).forEach(row => {
-        if (insufficientDataPattern.test(row.innerText.trim())) {
-            removeDomElement(row);
-        }    
     });
 }
 
 function lookAndProcessAllSteps() {
     Object.keys(tableMetaSpecs).forEach(key => {
-        const stepSpec = tableMetaSpecs[key];
+        const stepSpecs = tableMetaSpecs[key];
 
         const card = document.getElementById(key);
         if (!card) {
@@ -80,41 +99,35 @@ function lookAndProcessAllSteps() {
         }
 
         const cardBody = card.querySelector(".card-body");
-        const pattern = /У суб'єкта декларування (чи членів його сім'ї )?відсутні об'єкти для декларування в цьому розділі\./;
-        if (pattern.test(cardBody.innerText.trim())) {
-            hideDomElement(card);
-            return;
-        }
 
+        hideCardIfNoData(card, cardBody);
         cleanUnsufficientDataInCardBody(cardBody);
 
-        let rows = [];
         const table = card.querySelector("table.table");
         if (table) {
-            // 1. apply transformation strategy for each column if exists
-            rows = Array.from(table.rows);
-            rows.slice(1).forEach(row => {
-                Object.keys(stepSpec).forEach(columnKey => {
-                    const columnMeta = stepSpec[columnKey];
-                    const cell = row.cells[columnMeta.id];
+            updateCellIds(table, stepSpecs);
+
+            const rows = table.rows;
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                Object.keys(stepSpecs).forEach(columnKey => {
+                    const colId = stepSpecs[columnKey].realId;
+                    const cell = row.cells[colId];
                     if (cell) {
-                        const strategy = columnMapTransformations[columnKey];
-                        if (strategy) {
-                            strategy.trans(cell) ;
-                        }
+                        columnMapTransformations[columnKey]?.trans(cell);
                     }
                 });
-            });
+            }
 
             // 2. apply transformation strategy for whole table if exists
             const tableStrategy = specificStepDataTransformations[key]?.trans;
             if (tableStrategy) {
-                tableStrategy(table, rows, stepSpec);
+                tableStrategy(table, stepSpecs);
             }
 
             // 3. get description for the card if exists
-            if (stepSpec.desc_fn) {
-                stepSpec.desc_fn(table, rows, stepSpec);
+            if (stepSpecs.desc_fn) {
+                stepSpecs.desc_fn(table, stepSpecs);
             }
         }
         
@@ -122,34 +135,9 @@ function lookAndProcessAllSteps() {
         const titleStrategy = specificStepDataTransformations[key]?.titleExpand;
         if (titleStrategy) {
             const cardTitle = card.querySelector(".card-header .card-header-title .title");
-            titleStrategy(cardTitle, cardBody, rows, stepSpec);
+            titleStrategy(cardTitle, cardBody);
         }
     });
-}
-
-function removeDomElement(element) {
-    if (element) {
-        element.remove();
-    }
-}
-
-function hideDomElement(element) {
-    if (element) {
-        element.style.display = "none";
-    }
-}
-
-function findXPathElements(xpath, context = document) {
-    const result = document.evaluate(xpath, context, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-    const elements = [];
-    for (let i = 0; i < result.snapshotLength; i++) {
-        elements.push(result.snapshotItem(i));
-    }
-    return elements;
-}
-
-function toProperCase(text) {
-    return text.toLowerCase().replace(/(^|\s)\S/g, (match) => match.toUpperCase());
 }
 
 function consolidateFullName(element) {
@@ -215,26 +203,30 @@ function hideEmptyTableColumns() {
     });    
 }    
 
-function titleExpand0(cardTitle, cardBody, rows, stepSpec) {
+function titleExpand0(cardTitle, cardBody) {
     const firstRow = cardBody.querySelector(".row");
     const description = firstRow?.children[0].children[0].innerText.trim().toLowerCase() || "?";
     const year = firstRow?.children[1].innerText.trim() || "?";
     cardTitle.innerText += ` [${description}: ${year}]`;
 }
 
-function summarizeObjValuesInStep3(table, rows, tableSpec) {
+function summarizeObjValuesInStep3(table, tableSpec) {
     const colValue = tableSpec.value.id;
     
-    const totalValue = rows.slice(1)
+    const totalValue = Array.from(table.rows)
+    .slice(1)
     .map(row => parseFloat(row.cells[colValue].innerText.trim()) || 0)
     .reduce((sum, value) => sum + value, 0);
 }        
 
-function summarizeSecuritiesInStep7(table, rows, tableSpec) {
+function summarizeSecuritiesInStep7(table, tableSpec) {
     const colCounts = tableSpec.quantity.id;
     const colPrice = tableSpec.nominal_value.id;
 
-    const totalSecurities = rows.slice(1)
+
+    const rows = Array.from(table.rows);
+    const totalSecurities = rows
+        .slice(1)
         .map(row => {
             const getInnerValue = (index) => row.cells[index]?.innerText.trim() || "";
             const count = parseInt(getInnerValue(colCounts)) || 0;
@@ -243,7 +235,7 @@ function summarizeSecuritiesInStep7(table, rows, tableSpec) {
         })
         .reduce((sum, [count, price]) => sum + (count * price), 0);
 
-    const newRow = rows[rows.length - 1].cloneNode(true);
+    const newRow = rows.pop().cloneNode(true);
     for (let i = 0; i < newRow.cells.length; i++) {
         newRow.cells[i].innerText = "";
     }
@@ -251,11 +243,12 @@ function summarizeSecuritiesInStep7(table, rows, tableSpec) {
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
 
-function summarizeMoneyInStep11(table, rows, tableSpec) {
+function summarizeMoneyInStep11(table, tableSpec) {
     let total = 0.0;
     const amountsByRecipient = {};
     const colAmount = tableSpec.amount.id;
     const colRecipient = tableSpec.person_info.id;
+    const rows = Array.from(table.rows);
     const dataRows = rows.slice(1);
     const uniqueRecipient = new Set(dataRows.map(row => row.cells[colRecipient].innerText.trim()));
     uniqueRecipient
@@ -292,20 +285,20 @@ function summarizeMoneyInStep11(table, rows, tableSpec) {
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }    
 
-function summarizeMoneyByCurrencyInStep12(table, rows, tableSpec) {
+function summarizeMoneyByCurrencyInStep12(table, tableSpec) {
     const colAmountAndCurrency = tableSpec.asset_value.id;
 
     const uniqueCurrencies = new Set();
     const pairsAmountAndCurrency = [];
 
-    rows.slice(1)
-        .forEach(row => {
-            const amountAndCurrencyElements = row.cells[colAmountAndCurrency].querySelectorAll('.row .col-12 span:nth-child(2)');
-            const amount = parseFloat(amountAndCurrencyElements[0]?.innerText.trim()) || 0;
-            const currency = amountAndCurrencyElements[1]?.innerText.trim().slice(0, 3) || "undef";
-            pairsAmountAndCurrency.push({ amount, currency });
-            uniqueCurrencies.add(currency);
-        });    
+    const rows = table.rows;
+    for (let i = 1; i < rows.length; i++) {
+        const amountAndCurrencyElements = rows[i].cells[colAmountAndCurrency].querySelectorAll('.row .col-12 span:nth-child(2)');
+        const amount = parseFloat(amountAndCurrencyElements[0]?.innerText.trim()) || 0;
+        const currency = amountAndCurrencyElements[1]?.innerText.trim().slice(0, 3) || "undef";
+        pairsAmountAndCurrency.push({ amount, currency });
+        uniqueCurrencies.add(currency);
+    }  
 
     const newRows = [];    
     newRows[0] = rows[rows.length - 1].cloneNode(true);
@@ -467,23 +460,22 @@ function parseRealEstateTable(table, rows, stepSpec) {
         return `, частка ${fixedPercent}%`;
     };
 
-    rows
-        .forEach((row, index) => {
-        if (index === 0) return; // Пропускаємо заголовок таблиці
-        
+    const tabMeta = tableMetaSpecs["step-data-3"];
+    for (let index = 1; index < rows.length; index++) {
+        const row = rows[index];
         const cells = row.querySelectorAll('td');
-        if (cells.length < 5) return; // Пропускаємо некоректні рядки
+        if (cells.length < 5) continue; // Пропускаємо некоректні рядки
 
-        const locationData = cells[2].innerText.trim();
-        const text = cells[1].innerText.trim() + (locationData === "" ? "" : `\n${locationData}`);
-        
+        const locationData = cells[tabMeta.type_characteristics.realId].innerText.trim();
+        const text = cells[tabMeta.location.realId].innerText.trim() + (locationData === "" ? "" : `\n${locationData}`);
+
         const rawJson = "{\""
         + text.split("\n").map(e => e.split(":").map(s => s.trim()).join("\": \"")).join("\", \"")
         + "\"}";
         const data = JSON.parse(rawJson);
 
         // 4. Розрахунок частки та прав з п'ятої комірки права власності
-        const cellRights = cells[4];
+        const cellRights = cells[tabMeta.info.realId];
 
         const rightsRows = Array.from(cellRights.getElementsByClassName("row"));
         const rightsNotes = [];
@@ -492,8 +484,8 @@ function parseRealEstateTable(table, rows, stepSpec) {
         const ownTypeParts = firstRightsRowParts?.[0]?.trim().toLowerCase().split(',');
         const checkOwnTypeTxt = ownTypeParts[0];
         let checkPerson = "";
-        for(i = 1; i < firstRightsRowParts.length; i++) {
-            iParts = firstRightsRowParts[i].split(':');
+        for (let i = 1; i < firstRightsRowParts.length; i++) {
+            const iParts = firstRightsRowParts[i].split(':');
             if (iParts.length > 1 && iParts[0].trim() === "ПІБ") {
                 checkPerson = iParts[1].trim();
                 break;
@@ -537,17 +529,31 @@ function parseRealEstateTable(table, rows, stepSpec) {
             ? data[objType2]
             : data[objType]
             || "невідомий тип об'єкта";
-        
+
         const specifiedCost = +row.cells[3].innerText.split("\n")[0] || 0;
         const objPrice = specifiedCost > 0 ? `, вартість: ${specifiedCost} грн` : "";
 
         // Форматуємо підсумковий рядок для поточного об'єкта
         const record = `${index}) ${objTypeValue.toLowerCase()}, загальна площа: ${areaSquare}, за адресою: ${data[objAddress]}, у власності з ${data[objDate]}${objOwnRights}${objPrice};`;
         results.push(record);
-    });
+    }
 
     return results;
 }
+
+const columnMapTransformations = {
+    ["fullname"]: { trans: (element) => consolidateFullName(element) },
+    ["fullname_abroad"]: { trans: (element) => consolidateFullName(element) },
+    ["location"]: { trans: (element) => joinAddress(element) },
+};
+
+const specificStepDataTransformations = {
+    ["step-data-0"]: { titleExpand: (cardTitle, cardBody) => titleExpand0(cardTitle, cardBody) },
+    ["step-data-3"]: { trans: (table, stepSpec) => summarizeObjValuesInStep3(table, stepSpec) },
+    ["step-data-7"]: { trans: (table, stepSpec) => summarizeSecuritiesInStep7(table, stepSpec) },
+    ["step-data-11"]: { trans: (table, stepSpec) => summarizeMoneyInStep11(table, stepSpec) },
+    ["step-data-12"]: { trans: (table, stepSpec) => summarizeMoneyByCurrencyInStep12(table, stepSpec) },
+};
 
 function processPage() {
     lookAndProcessAllSteps();

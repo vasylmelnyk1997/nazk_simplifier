@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["https://public.nazk.gov.ua/documents/*"],
-      "js": ["specs.js", "content.js"],
+      "js": ["tools.js", "specs.js", "content.js"],
       "run_at": "document_idle"
     }
   ]
