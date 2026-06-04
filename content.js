@@ -30,14 +30,14 @@ const declaringPerson = (() => {
 const nazkExtStyles = document.createElement("style");
 nazkExtStyles.id = 'hoverCardbodyStyle_id';
 nazkExtStyles.innerText = `
-.card-header:hover { 
-    background-color: #eee; cursor: pointer; 
-} 
+.card-header:hover {
+    background-color: #eee; cursor: pointer;
+}
 .real-estate-results {
     margin-bottom: 15px;
     padding: 5px 10px;
     border: 1px solid #ddd;
-    border-radius: 5px; 
+    border-radius: 5px;
 }
 .real-estate-item {
     padding: 2px 0;
@@ -435,7 +435,7 @@ function addBadge() {
     document.title = `${reportYear}: ${document.title}`;
 }
 
-function parseRealEstateTable(table, rows, stepSpec) {
+function parseRealEstateTable(table, stepSpec) {
     objType = "Вид об'єкта";
     objType2 = "Інший вид об'єкта";
     objDate = "Дата набуття права";
@@ -461,6 +461,7 @@ function parseRealEstateTable(table, rows, stepSpec) {
     };
 
     const tabMeta = tableMetaSpecs["step-data-3"];
+    const rows = table.rows;
     for (let index = 1; index < rows.length; index++) {
         const row = rows[index];
         const cells = row.querySelectorAll('td');
