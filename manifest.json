@@ -3,7 +3,7 @@
   "name": "NAZK Data Simplifier",
   "version": "1.0",
   "description": "Приховує блоки на сайті НАЗК за текстом",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "clipboardWrite"],
   "action": {
     "default_popup": "popup.html",
     "default_title": "NAZK Simplifier"

@@ -10,6 +10,9 @@
 .nazk-real-estate-item {
     padding: 2px 0;
 }
+.nazk-real-estate-item:hover {
+    cursor: pointer;
+}
 .nazk-year-badge {
     position: fixed;
     z-index: 300;
@@ -48,4 +51,21 @@
   text-decoration: none;
   display: block;
   padding: 5px 0;
+}
+.nazk-box-blinking {
+  background-color: transparent;
+}
+.nazk-box-blinking.animate-blink {
+  animation: blink 0.5s ease-in-out;
+}
+@keyframes blink {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #e6e6e6;
+  }
+  100% {
+    background-color: transparent;
+  }
 }

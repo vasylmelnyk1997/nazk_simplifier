@@ -54,16 +54,26 @@ step-data-3 -- інша версія таблиці
                     const arrResult = parseRealEstateTable(table, stepSpec);
 
                     const resultContainer = document.createElement('div');
-                    resultContainer.className = 'nazk-real-estate-results';
+                    resultContainer.classList.add('nazk-real-estate-results');
+                    resultContainer.classList.add('nazk-box-blinking');
+                    resultContainer.title = "Натисніть, щоб скопіювати";
 
                     arrResult.forEach((result) => {
                         const resultDiv = document.createElement('div');
-                        resultDiv.className = 'nazk-real-estate-item';
+                        resultDiv.classList.add('nazk-real-estate-item');
                         resultDiv.textContent = result;
                         resultContainer.appendChild(resultDiv);
                     });
 
                     table.parentNode.insertBefore(resultContainer, table);
+
+                    resultContainer.addEventListener('click', _ => {
+                            navigator.clipboard.writeText(resultContainer.innerText);
+                            resultContainer.classList.add('animate-blink');
+                            resultContainer.addEventListener('animationend', () => {
+                                resultContainer.classList.remove('animate-blink');
+                            }, { once: true });
+                    });
                 } catch (error) {
                     console.error("Error occurred while processing real estate table:", error);
                 }
