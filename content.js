@@ -396,16 +396,16 @@ function addBadge() {
     const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
 
     const badgeDiv = document.createElement("div");
-    badgeDiv.className = "year-badge";
+    badgeDiv.className = "nazk-year-badge";
     
     const navItemDiv = document.createElement("div");
-    navItemDiv.className = "nav-item";
+    navItemDiv.className = "nazk-nav-item";
     
     const yearDiv = document.createElement("div");
     yearDiv.textContent = reportYear;
     
     const ddlDiv = document.createElement("div");
-    ddlDiv.className = "dropdown";
+    ddlDiv.className = "nazk-dropdown";
     ddlDiv.innerHTML = tableMetaSpecs["step-data-table_others_documents"].desc_fn_result || "Документи";
 
     navItemDiv.appendChild(yearDiv);

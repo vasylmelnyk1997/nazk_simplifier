@@ -1,19 +1,16 @@
-const nazkExtStyles = document.createElement("style");
-nazkExtStyles.id = 'hoverCardbodyStyle_id';
-nazkExtStyles.innerText = `
-.card-header:hover {
+.nazk-card-header:hover {
     background-color: #eee; cursor: pointer;
 }
-.real-estate-results {
+.nazk-real-estate-results {
     margin-bottom: 15px;
     padding: 5px 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
 }
-.real-estate-item {
+.nazk-real-estate-item {
     padding: 2px 0;
 }
-.year-badge {
+.nazk-year-badge {
     position: fixed;
     z-index: 300;
     top: 0px;
@@ -26,12 +23,12 @@ nazkExtStyles.innerText = `
     background-color: coral;
     color: whitesmoke;
 }
-.nav-item {
+.nazk-nav-item {
   position: relative;
   color: white;
   cursor: pointer;
 }
-.dropdown {
+.nazk-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -43,14 +40,12 @@ nazkExtStyles.innerText = `
   display: none; 
   min-width: 200px;
 }
-.nav-item:hover .dropdown {
+.nazk-nav-item:hover .nazk-dropdown {
   display: block;
 }
-.dropdown div a {
+.nazk-dropdown div a {
   color: #333;
   text-decoration: none;
   display: block;
   padding: 5px 0;
 }
-`;
-(document.head || document.documentElement).appendChild(nazkExtStyles);

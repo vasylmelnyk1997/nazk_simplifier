@@ -54,11 +54,11 @@ step-data-3 -- інша версія таблиці
                     const arrResult = parseRealEstateTable(table, stepSpec);
 
                     const resultContainer = document.createElement('div');
-                    resultContainer.className = 'real-estate-results';
+                    resultContainer.className = 'nazk-real-estate-results';
 
                     arrResult.forEach((result) => {
                         const resultDiv = document.createElement('div');
-                        resultDiv.className = 'real-estate-item';
+                        resultDiv.className = 'nazk-real-estate-item';
                         resultDiv.textContent = result;
                         resultContainer.appendChild(resultDiv);
                     });
