@@ -1,3 +1,7 @@
+const reportYear = document
+    .querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)")
+    .textContent.trim();
+
 const docTypeText = document
     .querySelector("#step .card-body .row:nth-child(2) div:nth-child(2)")
     .textContent.trim().toLowerCase();
@@ -280,26 +284,42 @@ function summarizeMoneyByCurrencyInStep12(table, tableSpec) {
         const currency = amountAndCurrencyElements[1]?.innerText.trim().slice(0, 3) || "undef";
         pairsAmountAndCurrency.push({ amount, currency });
         uniqueCurrencies.add(currency);
-    }  
+    }
 
     const newRows = [];    
     newRows[0] = rows[rows.length - 1].cloneNode(true);
     for (let i = 0; i < newRows[0].cells.length; i++) {
         newRows[0].cells[i].innerText = "";
-    }    
+    }
 
+    let uahTotal = 0;
     const tbody = table.getElementsByTagName('tbody')[0];
-    uniqueCurrencies.forEach((currency, i) => {
+    const currencyDiv = 
+        (amount, currency) => 
+                amount === 0 ? '' : `<div class="nazk-${currency}">${amount.toLocaleString('uk-UA', { style: 'currency', currency })}</div>`;
+    let rowIndex = 1;
+    uniqueCurrencies.forEach((currency) => {
         const total = pairsAmountAndCurrency
             .filter(pair => pair.currency === currency)
             .reduce((sum, pair) => sum + pair.amount, 0);
-        if (i !== 0) {
-            newRows[i] = newRows[0].cloneNode(true);
-        }    
-        newRows[i].cells[colAmountAndCurrency].innerText = `${total} ${currency}`;
-        tbody.appendChild(newRows[i]);
-    });    
-}    
+        newRows[rowIndex] = newRows[0].cloneNode(true);
+        let uahAmount = 0;
+        let nonUahAmount = 0;
+        if (currency === "UAH") {
+            uahAmount = +total;
+        } else {
+            nonUahAmount = +total;
+            uahAmount = +convertCurrency(total, currency, "UAH", reportYear);
+        }
+        uahTotal += +uahAmount;
+        newRows[rowIndex].cells[colAmountAndCurrency].innerHTML =
+            currencyDiv(nonUahAmount, currency) + currencyDiv(uahAmount, "UAH");
+        tbody.appendChild(newRows[rowIndex]);
+        rowIndex++;
+    });
+    newRows[0].cells[colAmountAndCurrency].innerHTML = currencyDiv(uahTotal, "UAH");
+    tbody.appendChild(newRows[0]);
+}
 
 function transformAddress(data) {
     const placeOfLiving = 'Населений пункт';
@@ -393,8 +413,6 @@ function addOnClickForAllCards() {
 }
 
 function addBadge() {
-    const reportYear = document.querySelector("#step-data-0 .card-body .col-lg-6:nth-child(2)").textContent.trim();
-
     const badgeDiv = document.createElement("div");
     badgeDiv.className = "nazk-year-badge";
     

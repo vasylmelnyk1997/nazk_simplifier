@@ -69,3 +69,14 @@
     background-color: transparent;
   }
 }
+.nazk-USD {
+    color: rgb(82, 146, 82);
+    font-size: 80%;
+}
+.nazk-EUR {
+    color: rgb(151, 108, 108);
+    font-size: 80%;
+}
+.nazk-UAH {
+    color: inherit;
+}
