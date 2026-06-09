@@ -52,28 +52,7 @@ step-data-3 -- інша версія таблиці
                 // test case: Явтушенко Олександр Миколайович, 2017
                 try {
                     const arrResult = parseRealEstateTable(table, stepSpec);
-
-                    const resultContainer = document.createElement('div');
-                    resultContainer.classList.add('nazk-real-estate-results');
-                    resultContainer.classList.add('nazk-box-blinking');
-                    resultContainer.title = "Натисніть, щоб скопіювати";
-
-                    arrResult.forEach((result) => {
-                        const resultDiv = document.createElement('div');
-                        resultDiv.classList.add('nazk-real-estate-item');
-                        resultDiv.textContent = result;
-                        resultContainer.appendChild(resultDiv);
-                    });
-
-                    table.parentNode.insertBefore(resultContainer, table);
-
-                    resultContainer.addEventListener('click', _ => {
-                            navigator.clipboard.writeText(resultContainer.innerText);
-                            resultContainer.classList.add('animate-blink');
-                            resultContainer.addEventListener('animationend', () => {
-                                resultContainer.classList.remove('animate-blink');
-                            }, { once: true });
-                    });
+                    insertCollectedResultTable(arrResult, table);
                 } catch (error) {
                     console.error("Error occurred while processing real estate table:", error);
                 }
@@ -96,6 +75,48 @@ step-data-3 -- інша версія таблиці
             ["brand_model_year"]: { id: 2, name: "марка, модель, рік випуску" },
             ["value"]: { id: 3, name: "вартість на дату набуття права або за останньою грошовою оцінкою, грн" },
             ["person_info"]: { id: 4, name: "інформація щодо особи, якій належить обʼєкт, і прав на нього" },
+            ["desc_fn"]: (table, stepSpec) => {
+                try {
+                    if (table && table.rows.length === 1) {
+                        return;
+                    }
+                    const typeVehicle = "Вид майна";
+                    const ownershipDate = "Дата набуття права";
+                    const brand = "Марка";
+                    const model = "Модель";
+                    const year = "Рік випуску"; 
+
+                    const vehicleData = [];
+                    for (let i = 1; i < table.rows.length; i++) {
+                        const cells = table.rows[i].cells;
+
+                        const data = toJSON(
+                            cells[stepSpec.type_characteristics.id].innerText.trim()
+                            + "\n" 
+                            + cells[stepSpec.brand_model_year.id].innerText.trim()
+                        );
+
+                        const ownershipInfo = cells[stepSpec.person_info.id].innerText
+                            .split("\n")
+                            .reduce((acc, s) => {
+                                if (acc !== "") acc += " ";
+                                
+                                if (s.startsWith("ПІБ:")) {
+                                    acc += s.substring(4).trim();
+                                } else {
+                                    acc += s.trim().toLowerCase();
+                                }
+                                return acc;
+                            }, "");
+
+                        vehicleData.push(`${i}) ${data[typeVehicle].toLowerCase()} ${data[brand]} ${data[model]}, ${data[year]} р.в., у власності з ${data[ownershipDate]}, ${ownershipInfo}`);
+                    }
+
+                    insertCollectedResultTable(vehicleData, table);
+                } catch (error) {
+                    console.error("Error occurred while processing real estate table:", error);
+                }
+            },
         },
 
         ["step-data-7"]: {
@@ -215,6 +236,30 @@ step-data-3 -- інша версія таблиці
         },
     }
 };
+
+function insertCollectedResultTable(data, table) {
+    const resultContainer = document.createElement('div');
+    resultContainer.classList.add('nazk-collection-results');
+    resultContainer.classList.add('nazk-box-blinking');
+    resultContainer.title = "Натисніть, щоб скопіювати";
+
+    data.forEach((result) => {
+        const resultDiv = document.createElement('div');
+        resultDiv.classList.add('nazk-collection-item');
+        resultDiv.textContent = result;
+        resultContainer.appendChild(resultDiv);
+    });
+
+    table.parentNode.insertBefore(resultContainer, table);
+
+    resultContainer.addEventListener('click', _ => {
+        navigator.clipboard.writeText(resultContainer.innerText);
+        resultContainer.classList.add('animate-blink');
+        resultContainer.addEventListener('animationend', () => {
+            resultContainer.classList.remove('animate-blink');
+        }, { once: true });
+    });
+}
 
 function getTableMetaSpec(docTypeText) {
     const docType = MAP_TO_DOCTYPE[docTypeText];

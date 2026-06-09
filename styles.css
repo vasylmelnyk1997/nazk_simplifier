@@ -1,16 +1,16 @@
 .card-header:hover {
     background-color: #eee; cursor: pointer;
 }
-.nazk-real-estate-results {
+.nazk-collection-results {
     margin-bottom: 15px;
     padding: 5px 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
 }
-.nazk-real-estate-item {
+.nazk-collection-item {
     padding: 2px 0;
 }
-.nazk-real-estate-item:hover {
+.nazk-collection-item:hover {
     cursor: pointer;
 }
 .nazk-year-badge {
@@ -63,7 +63,7 @@
     background-color: transparent;
   }
   50% {
-    background-color: #e6e6e6;
+    background-color: #d1dee9;
   }
   100% {
     background-color: transparent;

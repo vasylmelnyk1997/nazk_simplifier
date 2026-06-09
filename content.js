@@ -452,10 +452,7 @@ function parseRealEstateTable(table, stepSpec) {
         const locationData = cells[tabMeta.type_characteristics.realId].innerText.trim();
         const text = cells[tabMeta.location.realId].innerText.trim() + (locationData === "" ? "" : `\n${locationData}`);
 
-        const rawJson = "{\""
-        + text.split("\n").map(e => e.split(":").map(s => s.trim()).join("\": \"")).join("\", \"")
-        + "\"}";
-        const data = JSON.parse(rawJson);
+        const data = toJSON(text);
 
         // 4. Розрахунок частки та прав з п'ятої комірки права власності
         const cellRights = cells[tabMeta.info.realId];

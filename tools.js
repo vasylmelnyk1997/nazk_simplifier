@@ -22,3 +22,10 @@ function findXPathElements(xpath, context = document) {
 function toProperCase(text) {
     return text.toLowerCase().replace(/(^|\s)\S/g, (match) => match.toUpperCase());
 }
+
+function toJSON(text) {
+    const rawJson = "{\""
+        + text.split("\n").map(e => e.split(":").map(s => s.trim()).join("\": \"")).join("\", \"")
+        + "\"}";
+    return JSON.parse(rawJson);
+}
