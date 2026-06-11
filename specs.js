@@ -1,10 +1,12 @@
 const DOCTYPE = Object.freeze({
     DECLARATION: 'DECLARATION',
+    MODIFIED: 'MODIFIED',
     CHANGES: 'CHANGES',
 });
 
 const MAP_TO_DOCTYPE = {
     ["декларація"]: DOCTYPE.DECLARATION,
+    ["виправлена декларація"]: DOCTYPE.MODIFIED,
     ["повідомлення про суттєві зміни в майновому стані"]: DOCTYPE.CHANGES
 };
 
@@ -242,6 +244,11 @@ step-data-3 -- інша версія таблиці
             ["source"]: { id: 5, name: "інформація про джерело (джерела)" },
         },
     }
+};
+
+tableMetaSpecsDef[DOCTYPE.MODIFIED] = {
+    ...tableMetaSpecsDef[DOCTYPE.DECLARATION],
+    docType: "виправлена декларація"
 };
 
 function insertCollectedResultTable(data, table) {
