@@ -107,7 +107,11 @@ function lookAndProcessAllSteps() {
 
             // 2. apply transformation strategy for whole table if exists
             const tableStrategy = specificStepDataTransformations[key]?.trans;
-            if (tableStrategy) {
+            if (tableStrategy instanceof Array) {
+                for (const strategy of tableStrategy) {
+                    strategy(table, stepSpecs);
+                }
+            } else if (tableStrategy) {
                 tableStrategy(table, stepSpecs);
             }
 
@@ -539,18 +543,34 @@ function parseRealEstateTable(table, stepSpec) {
     return results;
 }
 
+function simplifyTextToEDRPOU(table, stepSpec) {
+    findAndReplaceText(
+        "Код в Єдиному державному реєстрі юридичних осіб, фізичних осіб – підприємців та громадських формувань:",
+        "Код ЄДРПОУ:",
+    {root: table});
+}
+
 const columnMapTransformations = {
-    ["fullname"]: { trans: (element) => consolidateFullName(element) },
-    ["fullname_abroad"]: { trans: (element) => consolidateFullName(element) },
-    ["location"]: { trans: (element) => joinAddress(element) },
+    // (element) => transform_fn(element)
+    ["fullname"]: { trans: consolidateFullName },
+    ["fullname_abroad"]: { trans: consolidateFullName },
+    ["location"]: { trans: joinAddress },
 };
 
 const specificStepDataTransformations = {
-    ["step-data-0"]: { titleExpand: (cardTitle, cardBody) => titleExpand0(cardTitle, cardBody) },
-    ["step-data-3"]: { trans: (table, stepSpec) => summarizeObjValuesInStep3(table, stepSpec) },
-    ["step-data-7"]: { trans: (table, stepSpec) => summarizeSecuritiesInStep7(table, stepSpec) },
-    ["step-data-11"]: { trans: (table, stepSpec) => summarizeMoneyInStep11(table, stepSpec) },
-    ["step-data-12"]: { trans: (table, stepSpec) => summarizeMoneyByCurrencyInStep12(table, stepSpec) },
+    // (cardTitle, cardBody) => titleExpand_fn(cardTitle, cardBody)
+    ["step-data-0"]: { titleExpand: titleExpand0 },
+    // (table, stepSpec) => transform_fn(table, stepSpec)
+    ["step-data-3"]: { trans: summarizeObjValuesInStep3 },
+    ["step-data-7"]: { trans: summarizeSecuritiesInStep7 },
+    ["step-data-8"]: { trans: simplifyTextToEDRPOU },
+    ["step-data-9"]: { trans: simplifyTextToEDRPOU },
+    ["step-data-10"]: { trans: simplifyTextToEDRPOU },
+    ["step-data-11"]: { trans: [summarizeMoneyInStep11, simplifyTextToEDRPOU] },
+    ["step-data-12"]: { trans: [summarizeMoneyByCurrencyInStep12, simplifyTextToEDRPOU] },
+    /* step-data-17 -> 12.1 */
+    ["step-data-17"]: { trans: simplifyTextToEDRPOU },
+    ["step-data-13"]: { trans: simplifyTextToEDRPOU },
 };
 
 function processPage() {
