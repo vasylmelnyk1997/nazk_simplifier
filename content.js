@@ -325,6 +325,42 @@ function summarizeMoneyByCurrencyInStep12(table, tableSpec) {
     tbody.appendChild(newRows[0]);
 }
 
+function cloneRowWithEmptyValues(table) {
+    const newRow = table.rows[table.rows.length - 1].cloneNode(true);
+    for (let i = 0; i < newRow.cells.length; i++) {
+        newRow.cells[i].innerText = "";
+    }
+    return newRow;
+}
+
+function summarizeMoneyInStep13(table, tableSpec) {
+    let total = [0.0, 0.0, 0.0, 0.0]; // loan, repayment, interest, liability end
+    const currencyId = tableSpec.liability_currency.id;
+    const loanAmountId = tableSpec.loan_amount.id;
+    const repaymentAmountId = tableSpec.repayment_amount.id;
+    const interestAmountId = tableSpec.interest_amount.id;
+    const liabilityEndAmountId = tableSpec.liability_end_amount.id;
+
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const currency = row.cells[currencyId].innerText.trim().slice(0, 3) || "UAH";
+        const amountByCurrency = (id) => convertCurrency(parseFloat(row.cells[id].innerText.trim()) || 0, currency, "UAH", reportYear);
+        total[0] += amountByCurrency(loanAmountId);
+        total[1] += amountByCurrency(repaymentAmountId);
+        total[2] += amountByCurrency(interestAmountId);
+        total[3] += amountByCurrency(liabilityEndAmountId);
+    }
+
+    const newRow = cloneRowWithEmptyValues(table);
+    const getTotal = (colId) => total[colId].toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+    newRow.cells[loanAmountId].innerText = getTotal(0);
+    newRow.cells[repaymentAmountId].innerText = getTotal(1);
+    newRow.cells[interestAmountId].innerText = getTotal(2);
+    newRow.cells[liabilityEndAmountId].innerText = getTotal(3);
+
+    table.getElementsByTagName('tbody')[0].appendChild(newRow);
+}    
+
 function transformAddress(data) {
     const placeOfLiving = 'Населений пункт';
 
@@ -570,7 +606,7 @@ const specificStepDataTransformations = {
     ["step-data-12"]: { trans: [summarizeMoneyByCurrencyInStep12, simplifyTextToEDRPOU] },
     /* step-data-17 -> 12.1 */
     ["step-data-17"]: { trans: simplifyTextToEDRPOU },
-    ["step-data-13"]: { trans: simplifyTextToEDRPOU },
+    ["step-data-13"]: { trans: [summarizeMoneyInStep13, simplifyTextToEDRPOU] },
 };
 
 function processPage() {
