@@ -225,10 +225,7 @@ function summarizeSecuritiesInStep7(table, tableSpec) {
         })
         .reduce((sum, [count, price]) => sum + (count * price), 0);
 
-    const newRow = rows.pop().cloneNode(true);
-    for (let i = 0; i < newRow.cells.length; i++) {
-        newRow.cells[i].innerText = "";
-    }
+    const newRow = cloneRowWithEmptyValues(table);
     newRow.cells[colPrice].innerText = totalSecurities.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
     table.getElementsByTagName('tbody')[0].appendChild(newRow);
 }
@@ -253,10 +250,7 @@ function summarizeMoneyInStep11(table, tableSpec) {
                 });    
         });        
 
-    const newRow = rows[rows.length - 1].cloneNode(true);    
-    for (let i = 0; i < newRow.cells.length; i++) {
-        newRow.cells[i].innerText = "";
-    }    
+    const newRow = cloneRowWithEmptyValues(table);
 
     Object.keys(amountsByRecipient).forEach((recipient) => {
         total += amountsByRecipient[recipient];
@@ -291,10 +285,7 @@ function summarizeMoneyByCurrencyInStep12(table, tableSpec) {
     }
 
     const newRows = [];    
-    newRows[0] = rows[rows.length - 1].cloneNode(true);
-    for (let i = 0; i < newRows[0].cells.length; i++) {
-        newRows[0].cells[i].innerText = "";
-    }
+    newRows[0] = cloneRowWithEmptyValues(table);
 
     let uahTotal = 0;
     const tbody = table.getElementsByTagName('tbody')[0];
@@ -323,14 +314,6 @@ function summarizeMoneyByCurrencyInStep12(table, tableSpec) {
     });
     newRows[0].cells[colAmountAndCurrency].innerHTML = currencyDiv(uahTotal, "UAH");
     tbody.appendChild(newRows[0]);
-}
-
-function cloneRowWithEmptyValues(table) {
-    const newRow = table.rows[table.rows.length - 1].cloneNode(true);
-    for (let i = 0; i < newRow.cells.length; i++) {
-        newRow.cells[i].innerText = "";
-    }
-    return newRow;
 }
 
 function summarizeMoneyInStep13(table, tableSpec) {

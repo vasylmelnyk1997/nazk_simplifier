@@ -29,3 +29,11 @@ function toJSON(text) {
         + "\"}";
     return JSON.parse(rawJson);
 }
+
+function cloneRowWithEmptyValues(table) {
+    const newRow = table.rows[table.rows.length - 1].cloneNode(true);
+    for (let i = 0; i < newRow.cells.length; i++) {
+        newRow.cells[i].innerText = "";
+    }
+    return newRow;
+}
